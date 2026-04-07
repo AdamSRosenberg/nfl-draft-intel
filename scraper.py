@@ -45,14 +45,87 @@ def fetch_google_news(prospect_name, days_back=7):
     except Exception:
         return []
 
-def fetch_all_google_news(results, prospects):
-    """Search Google News for each prospect and score results against all teams."""
-    print(f"  Google News: searching {len(prospects)} prospects...")
-    for i, prospect in enumerate(prospects):
-        print(f"\r  Google News: {i+1}/{len(prospects)} — {prospect}    ", end="", flush=True)
-        articles = fetch_google_news(prospect)
-        time.sleep(0.5)  # be polite
+REDDIT_FEEDS = [
+    "https://www.reddit.com/r/nfldraft/search.rss?sort=new&limit=25&q={prospect}",
+    "https://www.reddit.com/r/nfl/search.rss?sort=new&limit=15&q={prospect}+draft",
+]
+
+EXTRA_NEWS_SOURCES = [
+    "https://www.espn.com/espn/rss/nfl/news",
+    "https://www.nfl.com/rss/rsslanding?searchString=draft",
+    "https://profootballtalk.nbcsports.com/feed/",
+    "https://overthecap.com/feed",
+    "https://www.draftnetwork.com/feed",
+    "https://www.theringer.com/rss/nfl/index.xml",
+    "https://syndication.bleacherreport.com/streams/teams/feed.xml?team_id=1&sport_id=1",
+]
+
+def fetch_reddit(prospect, days_back=7):
+    """Fetch Reddit posts mentioning a prospect via RSS."""
+    cache_url = f"reddit:{prospect}"
+    cached = get_cached(cache_url)
+    if cached:
+        return cached
+    cutoff = datetime.now().astimezone() - timedelta(days=days_back)
+    articles = []
+    for feed_template in REDDIT_FEEDS:
+        url = feed_template.replace("{prospect}", requests.utils.quote(prospect))
+        try:
+            r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+            if r.status_code != 200:
+                continue
+            feed = feedparser.parse(r.content)
+            for entry in feed.entries[:10]:
+                pub_raw = entry.get("published", "") or entry.get("updated", "")
+                pub_dt = parse_date(pub_raw)
+                if pub_dt:
+                    if pub_dt.tzinfo is None:
+                        pub_dt = pub_dt.replace(tzinfo=datetime.now().astimezone().tzinfo)
+                    if pub_dt < cutoff:
+                        continue
+                text = BeautifulSoup(entry.get("summary", ""), "html.parser").get_text(" ", strip=True)
+                articles.append({
+                    "title": entry.get("title", ""),
+                    "summary": text[:400],
+                    "link": entry.get("link", ""),
+                    "published": pub_raw,
+                    "pub_dt": pub_dt.isoformat() if pub_dt else "",
+                    "source": entry.get("link","").split("/")[2].replace("www.",""),
+                })
+            time.sleep(0.3)
+        except Exception:
+            continue
+    set_cache(cache_url, articles)
+    return articles
+
+def fetch_extra_sources(results, prospects, days_back=7):
+    """Scrape extra national NFL news sources for prospect mentions."""
+    print(f"  Extra sources: scraping {len(EXTRA_NEWS_SOURCES)} feeds...")
+    for url in EXTRA_NEWS_SOURCES:
+        articles = fetch_feed(url, days_back=days_back)
+        time.sleep(0.3)
         for article in articles:
+            for prospect in prospects:
+                for team in list(FEEDS.keys()) + ["GENERAL"]:
+                    score, signals, levels = score_article(article, prospect, team)
+                    if score > 0:
+                        results[prospect][team]["score"] += score
+                        results[prospect][team]["signals"].extend(signals)
+                        results[prospect][team]["signal_levels"].extend(levels)
+                        results[prospect][team]["articles"].append({
+                            "title": article["title"],
+                            "link": article["link"],
+                            "source": article["source"],
+                            "published": article["pub_dt"] or article["published"],
+                        })
+
+def fetch_all_google_news(results, prospects):
+    """Search Google News + Reddit for each prospect and score results."""
+    print(f"  Google News + Reddit: searching {len(prospects)} prospects...")
+    for i, prospect in enumerate(prospects):
+        print(f"\r  Searching: {i+1}/{len(prospects)} — {prospect}    ", end="", flush=True)
+        # Google News
+        for article in fetch_google_news(prospect):
             for team in list(FEEDS.keys()) + ["GENERAL"]:
                 score, signals, levels = score_article(article, prospect, team)
                 if score > 0:
@@ -65,6 +138,21 @@ def fetch_all_google_news(results, prospects):
                         "source": article["source"],
                         "published": article["pub_dt"] or article["published"],
                     })
+        # Reddit
+        for article in fetch_reddit(prospect):
+            for team in list(FEEDS.keys()) + ["GENERAL"]:
+                score, signals, levels = score_article(article, prospect, team)
+                if score > 0:
+                    results[prospect][team]["score"] += score
+                    results[prospect][team]["signals"].extend(signals)
+                    results[prospect][team]["signal_levels"].extend(levels)
+                    results[prospect][team]["articles"].append({
+                        "title": article["title"],
+                        "link": article["link"],
+                        "source": article["source"],
+                        "published": article["pub_dt"] or article["published"],
+                    })
+        time.sleep(0.4)
     print()
 
 #!/usr/bin/env python3
@@ -711,7 +799,55 @@ def aggregate(refresh=False):
     # Sort by total signal activity (most buzz first)
     output["prospects"].sort(key=lambda p: p["total_signal_score"], reverse=True)
 
+    # Generate signal-driven mock draft
+    output["mock_draft"] = generate_mock_draft(output["prospects"])
+
     return output
+
+
+def generate_mock_draft(prospects):
+    """
+    Generate a Round 1 mock draft based on signal scores and draft order.
+    For each pick slot, selects the best available prospect with signal
+    connecting them to that team, or falls back to consensus rank.
+    """
+    draft_slots = sorted(DRAFT_ORDER.items(), key=lambda x: x[1])  # team, pick sorted by pick#
+    available = list(prospects)  # ordered by signal score
+    mock = []
+
+    for team, pick_num in draft_slots:
+        # Find any prospect with signal specifically pointing to this team
+        best = None
+        best_score = -1
+        for p in available:
+            team_signal = next((t for t in p["teams"] if t["team"] == team), None)
+            if team_signal and team_signal["score"] > best_score:
+                best_score = team_signal["score"]
+                best = p
+
+        # If no direct signal, take highest available by consensus rank
+        if not best or best_score == 0:
+            ranked = sorted(available, key=lambda p: p.get("consensus_rank", 999))
+            best = ranked[0] if ranked else None
+
+        if best:
+            available.remove(best)
+            team_data = next((t for t in best["teams"] if t["team"] == team), None)
+            mock.append({
+                "pick": pick_num,
+                "team": team,
+                "prospect": best["name"],
+                "pos": best["pos"],
+                "college": best["college"],
+                "consensus_rank": best.get("consensus_rank"),
+                "signal_score": team_data["score"] if team_data else 0,
+                "top_signals": team_data["top_signals"][:2] if team_data else [],
+                "confidence": "HIGH" if (team_data and team_data["score"] >= 15) else
+                              "MEDIUM" if (team_data and team_data["score"] >= 5) else "LOW",
+                "note": f"Signal-driven" if (team_data and team_data["score"] > 0) else "Best available by rank",
+            })
+
+    return mock
 
 # ─────────────────────────────────────────────
 #  DEMO DATA
