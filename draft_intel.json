@@ -1,0 +1,327 @@
+{
+  "generated_at": "2026-04-07T00:21:15.237019",
+  "draft_date": "2026-04-23",
+  "_note": "DEMO MODE \u2014 paste real output from live run into dashboard for AI analysis",
+  "prospects": [
+    {
+      "name": "Fernando Mendoza",
+      "pos": "QB",
+      "college": "Indiana",
+      "consensus_rank": 1,
+      "total_signal_score": 42,
+      "top_landing_spot": "Raiders",
+      "teams": [
+        {
+          "team": "Raiders",
+          "score": 38,
+          "top_signals": [
+            "top-30 visit",
+            "targeting",
+            "priority",
+            "per sources"
+          ],
+          "signal_levels": [
+            "HIGH",
+            "HIGH",
+            "HIGH",
+            "MEDIUM"
+          ],
+          "article_count": 4,
+          "top_articles": [
+            {
+              "title": "Raiders brass locks in Mendoza as franchise QB target",
+              "link": "https://silverandblackpride.com",
+              "source": "silverandblackpride.com",
+              "published": "2026-04-05T10:00:00"
+            }
+          ]
+        },
+        {
+          "team": "Browns",
+          "score": 18,
+          "top_signals": [
+            "considering",
+            "sources say"
+          ],
+          "signal_levels": [
+            "MEDIUM",
+            "MEDIUM"
+          ],
+          "article_count": 2,
+          "top_articles": [
+            {
+              "title": "Browns keeping options open at #2 if Raiders surprise",
+              "link": "https://dawgpounddaily.com",
+              "source": "dawgpounddaily.com",
+              "published": "2026-04-04T09:00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Arvell Reese",
+      "pos": "EDGE",
+      "college": "Ohio State",
+      "consensus_rank": 2,
+      "total_signal_score": 35,
+      "top_landing_spot": "Browns",
+      "teams": [
+        {
+          "team": "Browns",
+          "score": 30,
+          "top_signals": [
+            "pre-draft visit",
+            "targeting",
+            "buzz"
+          ],
+          "signal_levels": [
+            "HIGH",
+            "HIGH",
+            "MEDIUM"
+          ],
+          "article_count": 3,
+          "top_articles": [
+            {
+              "title": "Browns host Reese \u2014 EDGE rush top priority at #2",
+              "link": "https://dawgpounddaily.com",
+              "source": "dawgpounddaily.com",
+              "published": "2026-04-06T08:00:00"
+            }
+          ]
+        },
+        {
+          "team": "Giants",
+          "score": 18,
+          "top_signals": [
+            "interested in",
+            "fit"
+          ],
+          "signal_levels": [
+            "MEDIUM",
+            "MEDIUM"
+          ],
+          "article_count": 2,
+          "top_articles": [
+            {
+              "title": "Giants could pivot to Reese if Love gone",
+              "link": "https://bigblueview.com",
+              "source": "bigblueview.com",
+              "published": "2026-04-04T11:00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Carnell Tate",
+      "pos": "WR",
+      "college": "Ohio State",
+      "consensus_rank": 9,
+      "total_signal_score": 28,
+      "top_landing_spot": "Titans",
+      "teams": [
+        {
+          "team": "Titans",
+          "score": 26,
+          "top_signals": [
+            "visit",
+            "targeting",
+            "perfect fit",
+            "sources say"
+          ],
+          "signal_levels": [
+            "HIGH",
+            "HIGH",
+            "HIGH",
+            "MEDIUM"
+          ],
+          "article_count": 3,
+          "top_articles": [
+            {
+              "title": "Titans beat: Tate visited Nashville, Tennessee targeting WR1",
+              "link": "https://musiccitymiracles.com",
+              "source": "musiccitymiracles.com",
+              "published": "2026-04-05T12:00:00"
+            }
+          ]
+        },
+        {
+          "team": "Bears",
+          "score": 12,
+          "top_signals": [
+            "interested in"
+          ],
+          "signal_levels": [
+            "MEDIUM"
+          ],
+          "article_count": 1,
+          "top_articles": [
+            {
+              "title": "Bears monitor WR situation ahead of draft",
+              "link": "https://windycitygridiron.com",
+              "source": "windycitygridiron.com",
+              "published": "2026-04-03T14:00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "David Bailey",
+      "pos": "EDGE",
+      "college": "Texas Tech",
+      "consensus_rank": 7,
+      "total_signal_score": 24,
+      "top_landing_spot": "Saints",
+      "teams": [
+        {
+          "team": "Saints",
+          "score": 22,
+          "top_signals": [
+            "top-30 visit",
+            "interested in",
+            "buzz"
+          ],
+          "signal_levels": [
+            "HIGH",
+            "MEDIUM",
+            "MEDIUM"
+          ],
+          "article_count": 2,
+          "top_articles": [
+            {
+              "title": "Saints eye Bailey \u2014 New Orleans desperate for pass rush upgrade",
+              "link": "https://canalstreetchronicles.com",
+              "source": "canalstreetchronicles.com",
+              "published": "2026-04-06T09:00:00"
+            }
+          ]
+        },
+        {
+          "team": "Titans",
+          "score": 14,
+          "top_signals": [
+            "considering"
+          ],
+          "signal_levels": [
+            "MEDIUM"
+          ],
+          "article_count": 1,
+          "top_articles": [
+            {
+              "title": "Titans weigh EDGE options heading into final draft week",
+              "link": "https://musiccitymiracles.com",
+              "source": "musiccitymiracles.com",
+              "published": "2026-04-04T10:00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Jeremiyah Love",
+      "pos": "RB",
+      "college": "Notre Dame",
+      "consensus_rank": 3,
+      "total_signal_score": 22,
+      "top_landing_spot": "Giants",
+      "teams": [
+        {
+          "team": "Giants",
+          "score": 20,
+          "top_signals": [
+            "visit",
+            "priority",
+            "linked to"
+          ],
+          "signal_levels": [
+            "HIGH",
+            "HIGH",
+            "MEDIUM"
+          ],
+          "article_count": 2,
+          "top_articles": [
+            {
+              "title": "Giants host Love \u2014 NY targeting offensive weapon at #3",
+              "link": "https://bigblueview.com",
+              "source": "bigblueview.com",
+              "published": "2026-04-05T13:00:00"
+            }
+          ]
+        },
+        {
+          "team": "Broncos",
+          "score": 10,
+          "top_signals": [
+            "considering"
+          ],
+          "signal_levels": [
+            "MEDIUM"
+          ],
+          "article_count": 1,
+          "top_articles": [
+            {
+              "title": "Broncos could trade up for Love if board falls right",
+              "link": "https://milehighreport.com",
+              "source": "milehighreport.com",
+              "published": "2026-04-03T10:00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rueben Bain Jr",
+      "pos": "EDGE",
+      "college": "Miami",
+      "consensus_rank": 8,
+      "total_signal_score": 18,
+      "top_landing_spot": "Jets",
+      "teams": [
+        {
+          "team": "Jets",
+          "score": 16,
+          "top_signals": [
+            "visit",
+            "buzz",
+            "sources say"
+          ],
+          "signal_levels": [
+            "HIGH",
+            "MEDIUM",
+            "MEDIUM"
+          ],
+          "article_count": 2,
+          "top_articles": [
+            {
+              "title": "Jets visit Bain \u2014 arm length concerns not a dealbreaker per sources",
+              "link": "https://gangreengangblog.com",
+              "source": "gangreengangblog.com",
+              "published": "2026-04-04T11:00:00"
+            }
+          ]
+        },
+        {
+          "team": "Panthers",
+          "score": 10,
+          "top_signals": [
+            "interested in"
+          ],
+          "signal_levels": [
+            "MEDIUM"
+          ],
+          "article_count": 1,
+          "top_articles": [
+            {
+              "title": "Panthers evaluating Bain as EDGE option at #7",
+              "link": "https://catechism.net",
+              "source": "catechism.net",
+              "published": "2026-04-03T09:00:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
