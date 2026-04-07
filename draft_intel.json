@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-07T10:17:53.807742",
+  "generated_at": "2026-04-07T19:39:13.412Z",
   "draft_date": "2026-04-23",
   "prospects": [
     {
@@ -34,7 +34,7 @@
               "published": "2026-04-06T06:30:00-04:00"
             },
             {
-              "title": "Background on Ohio State\u2019s Arvell Reese before top-30 visit with Chiefs",
+              "title": "Background on Ohio State’s Arvell Reese before top-30 visit with Chiefs",
               "link": "https://www.arrowheadpride.com/kansas-city-chiefs-draft/198213/background-ohio-states-arvell-reese-top-30-visit-chiefs",
               "source": "arrowheadpride.com",
               "published": "2026-04-04T10:00:00-04:00"
@@ -65,7 +65,7 @@
               "published": "2026-04-06T17:45:00-04:00"
             },
             {
-              "title": "Florida State\u2019s Darrell Jackson Jr. can fill Las Vegas Raiders\u2019 need at nose tackle in 2026 NFL draft",
+              "title": "Florida State’s Darrell Jackson Jr. can fill Las Vegas Raiders’ need at nose tackle in 2026 NFL draft",
               "link": "https://www.silverandblackpride.com/nfl-draft/126208/las-vegas-raiders-nfl-draft-darrell-jackson-florida-state-film-breakdown",
               "source": "silverandblackpride.com",
               "published": "2026-04-06T16:04:00-04:00"
@@ -125,7 +125,7 @@
               "published": "2026-04-06T06:30:00-04:00"
             },
             {
-              "title": "Background on Ohio State\u2019s Arvell Reese before top-30 visit with Chiefs",
+              "title": "Background on Ohio State’s Arvell Reese before top-30 visit with Chiefs",
               "link": "https://www.arrowheadpride.com/kansas-city-chiefs-draft/198213/background-ohio-states-arvell-reese-top-30-visit-chiefs",
               "source": "arrowheadpride.com",
               "published": "2026-04-04T10:00:00-04:00"
@@ -336,7 +336,7 @@
           "article_count": 1,
           "top_articles": [
             {
-              "title": "Steelers\u2019 Joey Porter Jr proclaims himself as top 5 cornerback",
+              "title": "Steelers’ Joey Porter Jr proclaims himself as top 5 cornerback",
               "link": "https://www.behindthesteelcurtain.com/pittsburgh-steelers-news/168956/steelers-joey-porter-jr-proclaims-himself-as-top-5-cornerback-blueprint-podcast",
               "source": "behindthesteelcurtain.com",
               "published": "2026-04-05T11:00:00-04:00"
@@ -891,7 +891,7 @@
           "article_count": 1,
           "top_articles": [
             {
-              "title": "Minnesota Vikings News and Links:\u00a0Which Position Will The Vikings Take In Round One?",
+              "title": "Minnesota Vikings News and Links: Which Position Will The Vikings Take In Round One?",
               "link": "https://www.dailynorseman.com/minnesota-vikings-draft/95805/minnesota-vikings-news-and-links-which-position-will-the-vikings-take-in-round-one",
               "source": "dailynorseman.com",
               "published": "2026-04-04T14:41:58-04:00"
@@ -1072,6 +1072,349 @@
       "total_signal_score": 0,
       "top_landing_spot": null,
       "teams": []
+    }
+  ],
+  "mock_draft": [
+    {
+      "pick": 1,
+      "team": "Raiders",
+      "prospect": "Fernando Mendoza",
+      "pos": "QB",
+      "college": "Indiana",
+      "consensus_rank": 1,
+      "signal_score": 12,
+      "top_signals": [
+        "number one pick",
+        "wants"
+      ],
+      "confidence": "MEDIUM",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 2,
+      "team": "Jets",
+      "prospect": "Arvell Reese",
+      "pos": "EDGE",
+      "college": "Ohio State",
+      "consensus_rank": 2,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 3,
+      "team": "Cardinals",
+      "prospect": "Jeremiyah Love",
+      "pos": "RB",
+      "college": "Notre Dame",
+      "consensus_rank": 3,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 4,
+      "team": "Titans",
+      "prospect": "Sonny Styles",
+      "pos": "LB",
+      "college": "Ohio State",
+      "consensus_rank": 4,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 5,
+      "team": "Giants",
+      "prospect": "Caleb Downs",
+      "pos": "S",
+      "college": "Ohio State",
+      "consensus_rank": 5,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 6,
+      "team": "Browns",
+      "prospect": "Francis Mauigoa",
+      "pos": "OT",
+      "college": "Miami",
+      "consensus_rank": 6,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 7,
+      "team": "Commanders",
+      "prospect": "David Bailey",
+      "pos": "EDGE",
+      "college": "Texas Tech",
+      "consensus_rank": 7,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 8,
+      "team": "Saints",
+      "prospect": "Rueben Bain Jr",
+      "pos": "EDGE",
+      "college": "Miami",
+      "consensus_rank": 8,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 9,
+      "team": "Chiefs",
+      "prospect": "Carnell Tate",
+      "pos": "WR",
+      "college": "Ohio State",
+      "consensus_rank": 9,
+      "signal_score": 20,
+      "top_signals": [
+        "visited",
+        "trade up"
+      ],
+      "confidence": "HIGH",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 10,
+      "team": "Bengals",
+      "prospect": "Caleb Lomu",
+      "pos": "OT",
+      "college": "Utah",
+      "consensus_rank": 32,
+      "signal_score": 6,
+      "top_signals": [
+        "fit",
+        "perfect fit"
+      ],
+      "confidence": "MEDIUM",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 11,
+      "team": "Dolphins",
+      "prospect": "Makai Lemon",
+      "pos": "WR",
+      "college": "USC",
+      "consensus_rank": 10,
+      "signal_score": 5,
+      "top_signals": [
+        "top-30 visit"
+      ],
+      "confidence": "MEDIUM",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 12,
+      "team": "Cowboys",
+      "prospect": "Kenyon Sadiq",
+      "pos": "TE",
+      "college": "Oregon",
+      "consensus_rank": 11,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 13,
+      "team": "Rams",
+      "prospect": "Jordyn Tyson",
+      "pos": "WR",
+      "college": "Arizona State",
+      "consensus_rank": 12,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 14,
+      "team": "Ravens",
+      "prospect": "Mansoor Delane",
+      "pos": "CB",
+      "college": "LSU",
+      "consensus_rank": 13,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 15,
+      "team": "Buccaneers",
+      "prospect": "Spencer Fano",
+      "pos": "OT",
+      "college": "Utah",
+      "consensus_rank": 14,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 17,
+      "team": "Lions",
+      "prospect": "Olaivavega Ioane",
+      "pos": "OG",
+      "college": "Penn State",
+      "consensus_rank": 17,
+      "signal_score": 4,
+      "top_signals": [
+        "mock"
+      ],
+      "confidence": "LOW",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 18,
+      "team": "Vikings",
+      "prospect": "Dillon Thieneman",
+      "pos": "S",
+      "college": "Oregon",
+      "consensus_rank": 21,
+      "signal_score": 4,
+      "top_signals": [
+        "will take"
+      ],
+      "confidence": "LOW",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 19,
+      "team": "Panthers",
+      "prospect": "Monroe Freeling",
+      "pos": "OT",
+      "college": "Georgia",
+      "consensus_rank": 15,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 21,
+      "team": "Steelers",
+      "prospect": "Ty Simpson",
+      "pos": "QB",
+      "college": "Alabama",
+      "consensus_rank": 16,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 22,
+      "team": "Chargers",
+      "prospect": "T.J. Parker",
+      "pos": "EDGE",
+      "college": "Clemson",
+      "consensus_rank": 26,
+      "signal_score": 2,
+      "top_signals": [
+        "mock"
+      ],
+      "confidence": "LOW",
+      "note": "Signal-driven"
+    },
+    {
+      "pick": 23,
+      "team": "Eagles",
+      "prospect": "Jermod McCoy",
+      "pos": "CB",
+      "college": "Tennessee",
+      "consensus_rank": 18,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 25,
+      "team": "Bears",
+      "prospect": "Kadyn Proctor",
+      "pos": "OT",
+      "college": "Alabama",
+      "consensus_rank": 19,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 26,
+      "team": "Bills",
+      "prospect": "Avieon Terrell",
+      "pos": "CB",
+      "college": "Clemson",
+      "consensus_rank": 20,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 27,
+      "team": "49ers",
+      "prospect": "Peter Woods",
+      "pos": "DL",
+      "college": "Clemson",
+      "consensus_rank": 22,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 28,
+      "team": "Texans",
+      "prospect": "Denzel Boston",
+      "pos": "WR",
+      "college": "Washington",
+      "consensus_rank": 23,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 31,
+      "team": "Patriots",
+      "prospect": "Akheem Mesidor",
+      "pos": "EDGE",
+      "college": "Miami",
+      "consensus_rank": 24,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
+    },
+    {
+      "pick": 32,
+      "team": "Seahawks",
+      "prospect": "Omar Cooper Jr",
+      "pos": "WR",
+      "college": "Indiana",
+      "consensus_rank": 25,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "LOW",
+      "note": "Best available"
     }
   ]
 }
