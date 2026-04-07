@@ -800,87 +800,55 @@ def aggregate(refresh=False):
     output["prospects"].sort(key=lambda p: p["total_signal_score"], reverse=True)
 
     # Generate signal-driven mock draft
-    output["mock_draft"] = generate_mock_draft(output["prospects"])
-
+    try:
+        output["mock_draft"] = generate_mock_draft(output["prospects"])
+        print(f"  Mock draft: {len(output['mock_draft'])} picks generated")
+    except Exception as e:
+        print(f"  Mock draft error: {e}")
+        output["mock_draft"] = []
     return output
 
 
 def generate_mock_draft(prospects):
-    """
-    Generate a Round 1 mock draft based on signal scores and draft order.
-    For each pick slot, selects the best available prospect with signal
-    connecting them to that team, or falls back to consensus rank.
-    """
-    draft_slots = sorted(DRAFT_ORDER.items(), key=lambda x: x[1])  # team, pick sorted by pick#
-    available = list(prospects)  # ordered by signal score
+    """Signal-driven Round 1 mock draft."""
+    draft_slots = sorted(DRAFT_ORDER.items(), key=lambda x: x[1])
+    available = [dict(p) for p in prospects]
+    used = set()
     mock = []
-
     for team, pick_num in draft_slots:
-        # Find any prospect with signal specifically pointing to this team
         best = None
         best_score = -1
         for p in available:
-            team_signal = next((t for t in p["teams"] if t["team"] == team), None)
-            if team_signal and team_signal["score"] > best_score:
-                best_score = team_signal["score"]
+            if p["name"] in used:
+                continue
+            team_data = next((t for t in (p.get("teams") or []) if t["team"] == team), None)
+            if team_data and team_data["score"] > best_score:
+                best_score = team_data["score"]
                 best = p
-
-        # If no direct signal, take highest available by consensus rank
         if not best or best_score == 0:
-            ranked = sorted(available, key=lambda p: p.get("consensus_rank", 999))
-            best = ranked[0] if ranked else None
-
-        if best:
-            available.remove(best)
-            team_data = next((t for t in best["teams"] if t["team"] == team), None)
-            mock.append({
-                "pick": pick_num,
-                "team": team,
-                "prospect": best["name"],
-                "pos": best["pos"],
-                "college": best["college"],
-                "consensus_rank": best.get("consensus_rank"),
-                "signal_score": team_data["score"] if team_data else 0,
-                "top_signals": team_data["top_signals"][:2] if team_data else [],
-                "confidence": "HIGH" if (team_data and team_data["score"] >= 15) else
-                              "MEDIUM" if (team_data and team_data["score"] >= 5) else "LOW",
-                "note": f"Signal-driven" if (team_data and team_data["score"] > 0) else "Best available by rank",
-            })
-
+            remaining = [p for p in available if p["name"] not in used]
+            if not remaining:
+                continue
+            best = min(remaining, key=lambda p: p.get("consensus_rank") or 999)
+            best_score = 0
+        if not best:
+            continue
+        used.add(best["name"])
+        td = next((t for t in (best.get("teams") or []) if t["team"] == team), None)
+        mock.append({
+            "pick": pick_num,
+            "team": team,
+            "prospect": best["name"],
+            "pos": best.get("pos", ""),
+            "college": best.get("college", ""),
+            "consensus_rank": best.get("consensus_rank"),
+            "signal_score": best_score,
+            "top_signals": (td or {}).get("top_signals", [])[:2],
+            "confidence": "HIGH" if best_score >= 15 else "MEDIUM" if best_score >= 5 else "LOW",
+            "note": "Signal-driven" if best_score > 0 else "Best available",
+        })
     return mock
 
-# ─────────────────────────────────────────────
-#  DEMO DATA
-# ─────────────────────────────────────────────
-DEMO_OUTPUT = {
-    "generated_at": datetime.now().isoformat(),
-    "draft_date": "2026-04-23",
-    "_note": "DEMO MODE — paste real output from live run into dashboard for AI analysis",
-    "prospects": [
-        {"name": "Fernando Mendoza", "pos": "QB", "college": "Indiana", "consensus_rank": 1, "total_signal_score": 42,
-         "top_landing_spot": "Raiders",
-         "teams": [{"team": "Raiders", "score": 38, "top_signals": ["top-30 visit", "targeting", "priority", "per sources"], "signal_levels": ["HIGH","HIGH","HIGH","MEDIUM"], "article_count": 4, "top_articles": [{"title": "Raiders brass locks in Mendoza as franchise QB target", "link": "https://silverandblackpride.com", "source": "silverandblackpride.com", "published": "2026-04-05T10:00:00"}]}, {"team": "Browns", "score": 18, "top_signals": ["considering", "sources say"], "signal_levels": ["MEDIUM","MEDIUM"], "article_count": 2, "top_articles": [{"title": "Browns keeping options open at #2 if Raiders surprise", "link": "https://dawgpounddaily.com", "source": "dawgpounddaily.com", "published": "2026-04-04T09:00:00"}]}]},
-        {"name": "Arvell Reese", "pos": "EDGE", "college": "Ohio State", "consensus_rank": 2, "total_signal_score": 35,
-         "top_landing_spot": "Browns",
-         "teams": [{"team": "Browns", "score": 30, "top_signals": ["pre-draft visit", "targeting", "buzz"], "signal_levels": ["HIGH","HIGH","MEDIUM"], "article_count": 3, "top_articles": [{"title": "Browns host Reese — EDGE rush top priority at #2", "link": "https://dawgpounddaily.com", "source": "dawgpounddaily.com", "published": "2026-04-06T08:00:00"}]}, {"team": "Giants", "score": 18, "top_signals": ["interested in", "fit"], "signal_levels": ["MEDIUM","MEDIUM"], "article_count": 2, "top_articles": [{"title": "Giants could pivot to Reese if Love gone", "link": "https://bigblueview.com", "source": "bigblueview.com", "published": "2026-04-04T11:00:00"}]}]},
-        {"name": "Carnell Tate", "pos": "WR", "college": "Ohio State", "consensus_rank": 9, "total_signal_score": 28,
-         "top_landing_spot": "Titans",
-         "teams": [{"team": "Titans", "score": 26, "top_signals": ["visit", "targeting", "perfect fit", "sources say"], "signal_levels": ["HIGH","HIGH","HIGH","MEDIUM"], "article_count": 3, "top_articles": [{"title": "Titans beat: Tate visited Nashville, Tennessee targeting WR1", "link": "https://musiccitymiracles.com", "source": "musiccitymiracles.com", "published": "2026-04-05T12:00:00"}]}, {"team": "Bears", "score": 12, "top_signals": ["interested in"], "signal_levels": ["MEDIUM"], "article_count": 1, "top_articles": [{"title": "Bears monitor WR situation ahead of draft", "link": "https://windycitygridiron.com", "source": "windycitygridiron.com", "published": "2026-04-03T14:00:00"}]}]},
-        {"name": "David Bailey", "pos": "EDGE", "college": "Texas Tech", "consensus_rank": 7, "total_signal_score": 24,
-         "top_landing_spot": "Saints",
-         "teams": [{"team": "Saints", "score": 22, "top_signals": ["top-30 visit", "interested in", "buzz"], "signal_levels": ["HIGH","MEDIUM","MEDIUM"], "article_count": 2, "top_articles": [{"title": "Saints eye Bailey — New Orleans desperate for pass rush upgrade", "link": "https://canalstreetchronicles.com", "source": "canalstreetchronicles.com", "published": "2026-04-06T09:00:00"}]}, {"team": "Titans", "score": 14, "top_signals": ["considering"], "signal_levels": ["MEDIUM"], "article_count": 1, "top_articles": [{"title": "Titans weigh EDGE options heading into final draft week", "link": "https://musiccitymiracles.com", "source": "musiccitymiracles.com", "published": "2026-04-04T10:00:00"}]}]},
-        {"name": "Jeremiyah Love", "pos": "RB", "college": "Notre Dame", "consensus_rank": 3, "total_signal_score": 22,
-         "top_landing_spot": "Giants",
-         "teams": [{"team": "Giants", "score": 20, "top_signals": ["visit", "priority", "linked to"], "signal_levels": ["HIGH","HIGH","MEDIUM"], "article_count": 2, "top_articles": [{"title": "Giants host Love — NY targeting offensive weapon at #3", "link": "https://bigblueview.com", "source": "bigblueview.com", "published": "2026-04-05T13:00:00"}]}, {"team": "Broncos", "score": 10, "top_signals": ["considering"], "signal_levels": ["MEDIUM"], "article_count": 1, "top_articles": [{"title": "Broncos could trade up for Love if board falls right", "link": "https://milehighreport.com", "source": "milehighreport.com", "published": "2026-04-03T10:00:00"}]}]},
-        {"name": "Rueben Bain Jr", "pos": "EDGE", "college": "Miami", "consensus_rank": 8, "total_signal_score": 18,
-         "top_landing_spot": "Jets",
-         "teams": [{"team": "Jets", "score": 16, "top_signals": ["visit", "buzz", "sources say"], "signal_levels": ["HIGH","MEDIUM","MEDIUM"], "article_count": 2, "top_articles": [{"title": "Jets visit Bain — arm length concerns not a dealbreaker per sources", "link": "https://gangreengangblog.com", "source": "gangreengangblog.com", "published": "2026-04-04T11:00:00"}]}, {"team": "Panthers", "score": 10, "top_signals": ["interested in"], "signal_levels": ["MEDIUM"], "article_count": 1, "top_articles": [{"title": "Panthers evaluating Bain as EDGE option at #7", "link": "https://catechism.net", "source": "catechism.net", "published": "2026-04-03T09:00:00"}]}]},
-    ]
-}
-
-# ─────────────────────────────────────────────
-#  MAIN
-# ─────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save", "-s", action="store_true", default=True, help="Save to draft_intel.json")
