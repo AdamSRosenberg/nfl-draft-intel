@@ -108,6 +108,23 @@
     .detail-grid{grid-template-columns:1fr}
   }
 .scottbot-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px;margin-left:8px;font-size:11px;color:var(--muted);font-family:var(--mono);vertical-align:middle;}.scottbot-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;}#prospectSearch{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-size:14px;font-family:var(--sans);outline:none;box-sizing:border-box;}#prospectSearch:focus{border-color:var(--accent);}.s-clear{background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;}
+
+  .mock-draft-section{margin-top:40px;}
+  .mock-draft-header{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .mock-draft-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .pick-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;transition:border-color .15s;}
+  .pick-row:hover{border-color:var(--accent);}
+  .pick-num{font-size:11px;color:var(--muted);font-family:var(--mono);width:24px;flex-shrink:0;}
+  .pick-team{font-size:12px;font-weight:600;color:var(--muted);width:90px;flex-shrink:0;}
+  .pick-player{font-size:13px;font-weight:600;color:var(--text);}
+  .pick-pos{font-size:11px;color:var(--muted);margin-left:6px;font-family:var(--mono);}
+  .pick-signal{font-size:11px;margin-left:auto;font-family:var(--mono);}
+  .pick-signal.high{color:var(--green);}
+  .pick-signal.med{color:var(--amber);}
+  .pick-signal.low{color:var(--muted);}
+  .pick-row.signal-pick{border-color:rgba(79,255,255,0.2);}
+  @media(max-width:700px){.mock-draft-grid{grid-template-columns:1fr;}}
+
 </style>
 </head>
 <body>
@@ -120,7 +137,7 @@
     </div>
     <div style="text-align:right">
       <div style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="run-time">Loading...</div>
-      <button class="refresh-btn" style="margin-top:6px" onclick="loadData()">↺ Refresh</button>
+      <button class="refresh-btn" style="margin-top:6px" onclick="loadData().then(function(){ setTimeout(initMockDraft, 500); })">↺ Refresh</button>
     </div>
   </div>
 
@@ -438,6 +455,80 @@ function _run(q,out){
     }).join('');
     return'<div class="ai-panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><div style="font-size:20px;font-weight:700;color:var(--text)">'+p.name+'</div><div style="color:var(--muted);font-size:13px;margin-top:2px">'+p.pos+' · '+p.college+'</div>'+(p.consensus_rank?'<div style="color:var(--muted);font-size:12px;margin-top:3px">Rank <b style="color:var(--text)">#'+p.consensus_rank+'</b> · Top: <b style="color:var(--accent)">'+(p.top_landing_spot||'—')+'</b></div>':'')+'</div><div style="text-align:right"><div style="font-size:34px;font-weight:800;color:'+col+'">'+sc+'</div><div style="color:var(--muted);font-size:11px">signal pts</div></div></div>'+teams+'</div>';
   }).join('');
+}
+</script>
+<script>
+var DRAFT_ORDER = [
+  {pick:1,team:'Raiders'},{pick:2,team:'Jets'},{pick:3,team:'Cardinals'},
+  {pick:4,team:'Browns'},{pick:5,team:'Giants'},{pick:6,team:'Patriots'},
+  {pick:7,team:'Panthers'},{pick:8,team:'Saints'},{pick:9,team:'Titans'},
+  {pick:10,team:'Bears'},{pick:11,team:'Rams'},{pick:12,team:'Cowboys'},
+  {pick:13,team:'Commanders'},{pick:14,team:'Dolphins'},{pick:15,team:'Seahawks'},
+  {pick:16,team:'Jets'},{pick:17,team:'Lions'},{pick:18,team:'Chargers'},
+  {pick:19,team:'Bengals'},{pick:20,team:'Steelers'},{pick:21,team:'Ravens'},
+  {pick:22,team:'Cowboys'},{pick:23,team:'Texans'},{pick:24,team:'Browns'},
+  {pick:25,team:'Bears'},{pick:26,team:'Bills'},{pick:27,team:'49ers'},
+  {pick:28,team:'Chiefs'},{pick:29,team:'Dolphins'},{pick:30,team:'Packers'},
+  {pick:31,team:'Vikings'},{pick:32,team:'Eagles'}
+];
+
+function runMockDraft(prospects) {
+  var available = prospects.slice().sort(function(a,b){return a.consensus_rank - b.consensus_rank;});
+  var taken = {};
+  var results = [];
+
+  DRAFT_ORDER.forEach(function(slot) {
+    // Find highest-signal available player for this team
+    var teamPicks = available.filter(function(p) {
+      if(taken[p.name]) return false;
+      var teamData = (p.teams||[]).find(function(t){ return t.team === slot.team; });
+      return teamData && teamData.score > 0;
+    }).sort(function(a,b){
+      var aScore = (a.teams.find(function(t){return t.team===slot.team;})||{}).score||0;
+      var bScore = (b.teams.find(function(t){return t.team===slot.team;})||{}).score||0;
+      return bScore - aScore;
+    });
+
+    var picked, signalScore = 0, hasSignal = false;
+    if(teamPicks.length > 0) {
+      picked = teamPicks[0];
+      signalScore = (picked.teams.find(function(t){return t.team===slot.team;})||{}).score||0;
+      hasSignal = true;
+    } else {
+      // Best available by consensus rank
+      picked = available.find(function(p){ return !taken[p.name]; });
+    }
+
+    if(picked) {
+      taken[picked.name] = true;
+      results.push({pick:slot.pick, team:slot.team, player:picked.name, pos:picked.pos, signal:signalScore, hasSignal:hasSignal, rank:picked.consensus_rank});
+    }
+  });
+  return results;
+}
+
+function renderMockDraft(prospects) {
+  var picks = runMockDraft(prospects);
+  var html = picks.map(function(p) {
+    var sigClass = p.signal >= 20 ? 'high' : p.signal >= 10 ? 'med' : 'low';
+    var sigLabel = p.hasSignal ? '+'+p.signal+'pts' : 'BPA';
+    return '<div class="pick-row'+(p.hasSignal?' signal-pick':'')+'">'+
+      '<span class="pick-num">#'+p.pick+'</span>'+
+      '<span class="pick-team">'+p.team+'</span>'+
+      '<span class="pick-player">'+p.player+'<span class="pick-pos">'+p.pos+'</span></span>'+
+      '<span class="pick-signal '+sigClass+'">'+sigLabel+'</span>'+
+    '</div>';
+  }).join('');
+  var el = document.getElementById('mock-draft-board');
+  if(el) el.innerHTML = html;
+}
+
+function initMockDraft() {
+  if(_sd && _sd.prospects) { renderMockDraft(_sd.prospects); return; }
+  fetch('draft_intel.json').then(function(r){return r.json();}).then(function(data){
+    _sd = data;
+    renderMockDraft(data.prospects);
+  });
 }
 </script>
 </body>
