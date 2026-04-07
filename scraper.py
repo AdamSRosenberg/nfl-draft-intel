@@ -1,3 +1,72 @@
+# ─────────────────────────────────────────────
+# GOOGLE NEWS — per prospect (no API key needed)
+# ─────────────────────────────────────────────
+
+GOOGLE_NEWS_BASE = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q="
+
+def fetch_google_news(prospect_name, days_back=7):
+    """Search Google News RSS for a prospect and return recent articles."""
+    cache_url = f"gnews:{prospect_name}"
+    cached = get_cached(cache_url)
+    if cached:
+        return cached
+
+    cutoff = datetime.now().astimezone() - timedelta(days=days_back)
+    query = requests.utils.quote(f'"{prospect_name}" NFL draft 2026')
+    url = GOOGLE_NEWS_BASE + query
+    try:
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        if r.status_code != 200:
+            return []
+        feed = feedparser.parse(r.content)
+        articles = []
+        for entry in feed.entries[:20]:
+            pub_raw = entry.get("published", "") or entry.get("updated", "")
+            pub_dt = parse_date(pub_raw)
+            if pub_dt:
+                if pub_dt.tzinfo is None:
+                    pub_dt = pub_dt.replace(tzinfo=datetime.now().astimezone().tzinfo)
+                if pub_dt < cutoff:
+                    continue
+            text = BeautifulSoup(entry.get("summary", ""), "html.parser").get_text(" ", strip=True)
+            source = entry.get("source", {}).get("title", "") or entry.get("link", "").split("/")[2].replace("www.", "")
+            articles.append({
+                "title": entry.get("title", ""),
+                "summary": text[:400],
+                "link": entry.get("link", ""),
+                "published": pub_raw,
+                "pub_dt": pub_dt.isoformat() if pub_dt else "",
+                "source": source,
+            })
+            if len(articles) >= 15:
+                break
+        set_cache(cache_url, articles)
+        return articles
+    except Exception:
+        return []
+
+def fetch_all_google_news(results, prospects):
+    """Search Google News for each prospect and score results against all teams."""
+    print(f"  Google News: searching {len(prospects)} prospects...")
+    for i, prospect in enumerate(prospects):
+        print(f"\r  Google News: {i+1}/{len(prospects)} — {prospect}    ", end="", flush=True)
+        articles = fetch_google_news(prospect)
+        time.sleep(0.5)  # be polite
+        for article in articles:
+            for team in list(FEEDS.keys()) + ["GENERAL"]:
+                score, signals, levels = score_article(article, prospect, team)
+                if score > 0:
+                    results[prospect][team]["score"] += score
+                    results[prospect][team]["signals"].extend(signals)
+                    results[prospect][team]["signal_levels"].extend(levels)
+                    results[prospect][team]["articles"].append({
+                        "title": article["title"],
+                        "link": article["link"],
+                        "source": article["source"],
+                        "published": article["pub_dt"] or article["published"],
+                    })
+    print()
+
 #!/usr/bin/env python3
 """
 NFL Draft Intelligence Aggregator v3 — 2026 CLASS
