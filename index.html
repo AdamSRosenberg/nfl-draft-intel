@@ -136,7 +136,7 @@
       <span id="data-age"></span>
     </div>
 
-    <div style="margin-bottom:24px;"><div style="display:flex;gap:10px;margin-bottom:10px;"><input id="prospectSearch" type="text" placeholder="ð  Search a prospect..." oninput="doSearch(this.value)"/><button class="s-clear" onclick="document.getElementById('prospectSearch').value='';doSearch('')">â Clear</button></div><div id="searchOut"></div></div><div class="stats-bar">
+    <div style="margin-bottom:24px;"><div style="display:flex;gap:10px;margin-bottom:10px;"><input id="prospectSearch" type="text" placeholder="🔍  Search a prospect..." oninput="doSearch(this.value)"/><button class="s-clear" onclick="document.getElementById('prospectSearch').value='';doSearch('')">✕ Clear</button></div><div id="searchOut"></div></div><div class="stats-bar">
       <div class="stat-card"><div class="stat-label">Prospects tracked</div><div class="stat-val" id="s-total">Ã¢ÂÂ</div><div class="stat-sub">verified 2026 class</div></div>
       <div class="stat-card"><div class="stat-label">With signal</div><div class="stat-val" id="s-signal">Ã¢ÂÂ</div><div class="stat-sub">active intel found</div></div>
       <div class="stat-card"><div class="stat-label">Hottest prospect</div><div class="stat-val" id="s-hot" style="font-size:16px">Ã¢ÂÂ</div><div class="stat-sub" id="s-hot-sub">highest signal score</div></div>
@@ -172,264 +172,37 @@
 </div>
 
 <script>
-let currentData = null;
-let expandedPlayer = null;
-
-async function loadData() {
-  document.getElementById('loading-state').style.display = 'block';
-  document.getElementById('main-content').style.display = 'none';
-
-  try {
-    const r = await fetch('draft_intel.json?t=' + Date.now());
-    if (!r.ok) throw new Error('No data file yet');
-    const data = await r.json();
-    currentData = data;
-    render(data);
-    document.getElementById('loading-state').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-  } catch(e) {
-    document.getElementById('loading-state').innerHTML = `
-      <div style="color:var(--red);margin-bottom:12px">No draft_intel.json found yet.</div>
-      <div style="color:var(--muted);margin-bottom:16px">Run the GitHub Actions workflow manually to generate the first data file.</div>
-      <a href="https://github.com/AdamSRosenberg/nfl-draft-intel/actions" target="_blank" class="refresh-btn">Go to GitHub Actions Ã¢ÂÂ</a>`;
-  }
-}
-
-function render(data) {
-  const gen = new Date(data.generated_at);
-  const now = new Date();
-  const hoursAgo = Math.round((now - gen) / 3600000);
-  document.getElementById('run-time').textContent = gen.toLocaleString();
-  document.getElementById('data-age').textContent = hoursAgo < 1 ? 'Updated just now' : `Updated ${hoursAgo}h ago`;
-
-  const withSignal = data.prospects.filter(p => p.total_signal_score > 0);
-  const hottest = withSignal[0];
-  const draftDate = new Date('2026-04-23');
-  const days = Math.max(0, Math.round((draftDate - now) / 86400000));
-
-  document.getElementById('s-total').textContent = data.prospects.length;
-  document.getElementById('s-signal').textContent = withSignal.length;
-  document.getElementById('s-hot').textContent = hottest ? hottest.name.split(' ').slice(-1)[0] : 'Ã¢ÂÂ';
-  document.getElementById('s-hot-sub').textContent = hottest ? hottest.total_signal_score + ' pts signal' : 'Ã¢ÂÂ';
-  document.getElementById('s-days').textContent = days;
-
-  runAI(data);
-  renderMovers(data);
-  renderTicker(data);
-  renderBoard(data);
-}
-
-async function runAI(data) {
-  const output = document.getElementById('ai-output');
-  const top = data.prospects.filter(p => p.total_signal_score > 0).slice(0, 8);
-  const summary = top.map(p => {
-    const teams = p.teams.slice(0,3).map(t => `${t.team}(${t.score}pts,signals:${t.top_signals.slice(0,2).join(',')})`).join('|');
-    return `${p.name}[${p.pos},rank#${p.consensus_rank}] signal:${p.total_signal_score} teams:${teams}`;
-  }).join('\n');
-
-  const headlines = data.prospects.flatMap(p =>
-    p.teams.flatMap(t => t.top_articles.map(a => `${p.name}Ã¢ÂÂ${t.team}:"${a.title}"(${a.source})`))
-  ).slice(0, 15).join('\n');
-
-  const prompt = `You are an NFL Draft intelligence analyst. 2026 NFL Draft is April 23-25 in Pittsburgh. Data scraped from beat reporters today (NOT ESPN).
-
-SIGNAL DATA:
-${summary}
-
-HEADLINES:
-${headlines}
-
-Give sharp, actionable analysis for a bettor. Format with these exact sections:
-
-**LOCKS** Ã¢ÂÂ 2 player-team connections that are essentially confirmed. Why.
-
-**RISING** Ã¢ÂÂ 2 prospects generating more signal than their consensus rank suggests. What beat reporters are saying.
-
-**FALLING/QUIET** Ã¢ÂÂ 1-2 prospects surprisingly quiet given their ranking. What that silence means.
-
-**BETTING EDGE** Ã¢ÂÂ The 2-3 sharpest plays based purely on this intel. Be specific.
-
-Keep it tight and actionable. No fluff.`;
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+var _sd=null;
+function doSearch(q){
+  q=(q||'').trim().toLowerCase();
+  var out=document.getElementById('searchOut');
+  if(!q){out.innerHTML='';return;}
+  if(_sd){_runSearch(q,out);}else{
+    fetch('draft_intel.json').then(function(r){return r.json();}).then(function(data){
+      _sd=data;_runSearch(q,out);
     });
-    const result = await resp.json();
-    const text = result.content?.[0]?.text || '';
-    output.innerHTML = text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-  } catch(e) {
-    output.innerHTML = buildStaticAnalysis(currentData);
   }
 }
-
-function buildStaticAnalysis(data) {
-  const top = data.prospects.filter(p => p.total_signal_score > 0);
-  if (!top.length) return 'No signal data yet Ã¢ÂÂ run the scraper to populate intel.';
-
-  const locks = top.slice(0, 2).map(p => {
-    const t = p.teams[0];
-    return `<strong>${p.name} Ã¢ÂÂ ${t.team}</strong>: ${t.top_signals.slice(0,2).join(', ')} (score: ${t.score})`;
-  }).join('<br>');
-
-  const risers = top.filter(p => p.consensus_rank > 5).slice(0, 2).map(p => {
-    const t = p.teams[0];
-    return `<strong>${p.name}</strong> (consensus #${p.consensus_rank}) Ã¢ÂÂ ${t.team} generating ${p.total_signal_score}pts signal`;
-  }).join('<br>');
-
-  return `<strong>LOCKS</strong><br>${locks}<br><br><strong>RISING</strong><br>${risers}<br><br><em>Paste this JSON into Claude.ai chat for deeper AI analysis and betting recommendations.</em>`;
-}
-
-function renderMovers(data) {
-  const withSignal = data.prospects.filter(p => p.total_signal_score > 0);
-  const sorted = [...withSignal].sort((a,b) => b.total_signal_score - a.total_signal_score);
-  const risers = sorted.slice(0, 4);
-  const quiet = data.prospects.filter(p => p.total_signal_score === 0).slice(0, 4);
-
-  document.getElementById('movers-grid').innerHTML = `
-    <div class="mover-panel">
-      <div class="mover-head rising">Ã¢ÂÂ Rising Ã¢ÂÂ strong signal</div>
-      ${risers.map(p => {
-        const t = p.teams[0];
-        return `<div class="mover-item">
-          <div><div class="mover-name">${p.name} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
-          <div class="mover-reason">${t?.team||'Ã¢ÂÂ'}: ${t?.top_signals?.[0]||'signal detected'}</div></div>
-          <div class="mover-delta up">+${p.total_signal_score}pts</div>
-        </div>`;
-      }).join('')}
-    </div>
-    <div class="mover-panel">
-      <div class="mover-head falling">Ã¢ÂÂ Quiet Ã¢ÂÂ no signal</div>
-      ${quiet.map(p => `<div class="mover-item">
-        <div><div class="mover-name">${p.name} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
-        <div class="mover-reason">No beat reporter activity</div></div>
-        <div class="mover-delta down">silent</div>
-      </div>`).join('')}
-    </div>`;
-}
-
-function renderTicker(data) {
-  const articles = data.prospects.flatMap(p =>
-    p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, prospect: p.name, team: t.team})))
-  ).filter(a => a.title).sort((a,b) => new Date(b.published||0) - new Date(a.published||0));
-
-  document.getElementById('ticker-list').innerHTML = articles.slice(0, 12).map(a => {
-    const d = a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-    return `<div class="ticker-item">
-      <div class="ticker-team">${a.team}</div>
-      <div style="flex:1">
-        <div><span class="ticker-prospect">${a.prospect}</span>
-        <a href="${a.link}" target="_blank" style="color:var(--text);text-decoration:none">${a.title}</a></div>
-        <div class="ticker-source">${a.source}</div>
-      </div>
-      <div class="ticker-date">${d}</div>
-    </div>`;
-  }).join('') || '<div style="padding:16px;color:var(--muted);font-family:var(--mono);font-size:12px">No headlines yet Ã¢ÂÂ run scraper for live data</div>';
-}
-
-function barColor(score) {
-  if (score >= 30) return '#4f7fff';
-  if (score >= 18) return '#2dcc6f';
-  if (score >= 8)  return '#ffb84d';
-  return '#666680';
-}
-
-function renderBoard(data) {
-  const sorted = [...data.prospects].sort((a,b) => b.total_signal_score - a.total_signal_score);
-  const maxScore = Math.max(...sorted.map(p => p.total_signal_score), 1);
-
-  document.getElementById('board-list').innerHTML = sorted.map((p, i) => {
-    const topTeam = p.teams?.[0];
-    const pct = Math.round(p.total_signal_score / maxScore * 100);
-    const color = barColor(p.total_signal_score);
-    const isExp = expandedPlayer === p.name;
-    const trendDiff = p.consensus_rank - (i + 1);
-    const trendStr = trendDiff > 0 ? `+${trendDiff}` : trendDiff < 0 ? `${trendDiff}` : 'Ã¢ÂÂ';
-    const trendClass = trendDiff > 0 ? 'up' : trendDiff < 0 ? 'down' : 'flat';
-    const conf = topTeam ? Math.min(95, Math.round(topTeam.score / maxScore * 90 + 10)) : 0;
-
-    let detail = '';
-    if (isExp && p.teams.length) {
-      const maxT = Math.max(...p.teams.map(t => t.score), 1);
-      const allH = p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, team:t.team})));
-      detail = `<div class="detail-panel"><div class="detail-grid">
-        <div>
-          <div class="detail-section-title">Team interest</div>
-          ${p.teams.slice(0,5).map(t => `
-            <div class="team-bar-row">
-              <div class="team-bar-label">${t.team}</div>
-              <div class="tb-bar-bg"><div class="tb-bar-fill" style="width:${Math.round(t.score/maxT*100)}%;background:${barColor(t.score)}"></div></div>
-              <div class="tb-score">${t.score}</div>
-            </div>
-            <div style="margin-bottom:10px">${(t.top_signals||[]).map((s,si) => `<span class="signal-pill ${t.signal_levels?.[si]||'LOW'}">${s}</span>`).join('')}</div>
-          `).join('')}
-        </div>
-        <div>
-          <div class="detail-section-title">Headlines</div>
-          <div class="headlines-list">
-            ${allH.slice(0,4).map(a => {
-              const d = a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-              return `<div class="headline-item">
-                <div class="headline-source">${a.team} ÃÂ· ${a.source}</div>
-                <div class="headline-text"><a href="${a.link}" target="_blank" style="color:var(--text);text-decoration:none">${a.title}</a></div>
-                <div class="headline-date">${d}</div>
-              </div>`;
-            }).join('') || '<div style="color:var(--muted);font-size:12px">No headlines yet</div>'}
-          </div>
-        </div>
-      </div></div>`;
-    }
-
-    return `<div class="player-row${isExp?' expanded':''}" onclick="toggle('${p.name}')">
-      <div class="rank">${p.consensus_rank}</div>
-      <div>
-        <div class="player-name">${p.name}<span class="pos-badge">${p.pos}</span></div>
-        <div class="player-school">${p.college}</div>
-      </div>
-      <div class="trend-val ${trendClass}">${trendStr}</div>
-      <div>
-        <div class="signal-bar-bg"><div class="signal-bar-fill" style="width:${p.total_signal_score>0?pct:3}%;background:${color}"></div></div>
-        <div class="signal-score">${p.total_signal_score}pts</div>
-      </div>
-      <div>
-        <div class="landing-team">${topTeam?.team||'Ã¢ÂÂ'}</div>
-        <div class="landing-conf">${topTeam?'top signal':''}</div>
-      </div>
-      <div>
-        <div class="landing-team">${topTeam?conf+'%':''}</div>
-        <div class="expand-btn">${isExp?'Ã¢ÂÂ² close':'Ã¢ÂÂ¼ detail'}</div>
-      </div>
-    </div>${detail}`;
+function _runSearch(q,out){
+  var mm=(_sd.prospects||[]).filter(function(p){return p.name.toLowerCase().indexOf(q)>-1;});
+  if(!mm.length){out.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">No prospects found for "'+q+'"</p>';return;}
+  out.innerHTML=mm.map(function(p){
+    var sc=p.total_signal_score;
+    var col=sc>=20?'var(--green)':sc>=10?'var(--amber)':'var(--red)';
+    var teams=(p.teams||[]).map(function(t){
+      var sigs=(t.top_signals||[]).map(function(s,i){
+        var lv=(t.signal_levels||[])[i]||'';
+        var c=lv==='HIGH'?'var(--green)':lv==='MEDIUM'?'var(--amber)':'var(--muted)';
+        return '<span style="background:'+c+'22;color:'+c+';border-radius:4px;padding:2px 6px;font-size:11px;margin:2px;display:inline-block">'+s+'</span>';
+      }).join('');
+      var arts=(t.top_articles||[]).slice(0,3).map(function(a){
+        return '<div style="padding:5px 0;border-bottom:1px solid var(--border)"><a href="'+a.link+'" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px">'+a.title+'</a><br><span style="color:var(--muted);font-size:11px">'+a.source+'</span></div>';
+      }).join('');
+      return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><b style="color:var(--text);font-size:13px">'+t.team+'</b><span style="font-size:20px;font-weight:800;color:var(--green)">+'+t.score+' pts</span></div><div style="margin-bottom:6px">'+sigs+'</div>'+arts+'</div>';
+    }).join('');
+    return '<div class="ai-panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><div style="font-size:20px;font-weight:700;color:var(--text)">'+p.name+'</div><div style="color:var(--muted);font-size:13px;margin-top:2px">'+p.pos+' · '+p.college+'</div>'+(p.consensus_rank?'<div style="color:var(--muted);font-size:12px;margin-top:3px">Rank <b style="color:var(--text)">#'+p.consensus_rank+'</b> · Top: <b style="color:var(--accent)">'+(p.top_landing_spot||'—')+'</b></div>':'')+'</div><div style="text-align:right"><div style="font-size:34px;font-weight:800;color:'+col+'">'+sc+'</div><div style="color:var(--muted);font-size:11px">signal pts</div></div></div>'+teams+'</div>';
   }).join('');
 }
-
-function toggle(name) {
-  expandedPlayer = expandedPlayer === name ? null : name;
-  if (currentData) renderBoard(currentData);
-}
-
-loadData();
 </script>
-<script>
-window._searchData = null;
-async function loadSearchData() {
-  if (window._searchData) return window._searchData;
-  try {
-    const r = await fetch('draft_intel.json');
-    window._searchData = await r.json();
-  } catch(e) { window._searchData = {prospects:[]}; }
-  return window._searchData;
-}
-async function doSearch(q){q=(q||'').trim().toLowerCase();var out=document.getElementById('searchOut');if(!q){out.innerHTML='';return;}
-  var data = await loadSearchData();
-  var pp=data.prospects||[];var mm=pp.filter(function(p){return p.name.toLowerCase().indexOf(q)>-1;});if(!mm.length){out.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">No prospects found for "'+q+'"</p>';return;}out.innerHTML=mm.map(function(p){var sc=p.total_signal_score;var col=sc>=20?'var(--green)':sc>=10?'var(--amber)':'var(--red)';var teams=(p.teams||[]).map(function(t){var sigs=(t.top_signals||[]).map(function(s,i){var lv=(t.signal_levels||[])[i]||'';var c=lv==='HIGH'?'var(--green)':lv==='MEDIUM'?'var(--amber)':'var(--muted)';return'<span style="background:'+c+'22;color:'+c+';border-radius:4px;padding:2px 6px;font-size:11px;margin:2px;display:inline-block">'+s+'</span>';}).join('');var arts=(t.top_articles||[]).slice(0,3).map(function(a){return'<div style="padding:5px 0;border-bottom:1px solid var(--border)"><a href="'+a.link+'" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px">'+a.title+'</a><br><span style="color:var(--muted);font-size:11px">'+a.source+'</span></div>';}).join('');return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><b style="color:var(--text);font-size:13px">'+t.team+'</b><span style="font-size:20px;font-weight:800;color:var(--green)">+'+t.score+' pts</span></div><div style="margin-bottom:6px">'+sigs+'</div>'+arts+'</div>';}).join('');return'<div class="ai-panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><div style="font-size:20px;font-weight:700;color:var(--text)">'+p.name+'</div><div style="color:var(--muted);font-size:13px;margin-top:2px">'+p.pos+' Â· '+p.college+'</div>'+(p.consensus_rank?'<div style="color:var(--muted);font-size:12px;margin-top:3px">Rank <b style="color:var(--text)">#'+p.consensus_rank+'</b> Â· Top: <b style="color:var(--accent)">'+(p.top_landing_spot||'â')+'</b></div>':'')+'</div><div style="text-align:right"><div style="font-size:34px;font-weight:800;color:'+col+'">'+sc+'</div><div style="color:var(--muted);font-size:11px">signal pts</div></div></div>'+teams+'</div>';}).join('');}</script>
 </body>
 </html>
