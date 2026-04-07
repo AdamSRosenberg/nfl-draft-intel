@@ -241,9 +241,9 @@ ${headlines}
 
 Give sharp, actionable analysis for a bettor. Format with these exact sections:
 
-**LOCKS** — 2 player-team connections that are essentially confirmed. Why.
+**STRONG SIGNAL** — 2 player-team connections that are essentially confirmed. Why.
 
-**RISING** — 2 prospects generating more signal than their consensus rank suggests. What beat reporters are saying.
+**RISING SIGNAL** — 2 prospects generating more signal than their consensus rank suggests. What beat reporters are saying.
 
 **FALLING/QUIET** — 1-2 prospects surprisingly quiet given their ranking. What that silence means.
 
@@ -285,7 +285,7 @@ function buildStaticAnalysis(data) {
     return `<strong>${p.name}</strong> (consensus #${p.consensus_rank}) → ${t.team} generating ${p.total_signal_score}pts signal`;
   }).join('<br>');
 
-  return `<strong>LOCKS</strong><br>${locks}<br><br><strong>RISING</strong><br>${risers}<br><br><em>Paste this JSON into Claude.ai chat for deeper AI analysis and betting recommendations.</em>`;
+  return `<strong>STRONG SIGNAL</strong><br>${locks}<br><br><strong>RISING SIGNAL</strong><br>${risers}<br><br><em>Paste this JSON into Claude.ai chat for deeper AI analysis and betting recommendations.</em>`;
 }
 
 function renderMovers(data) {
