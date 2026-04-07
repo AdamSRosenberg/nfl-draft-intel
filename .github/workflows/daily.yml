@@ -22,6 +22,6 @@ jobs:
         run: |
           git config --global user.email "bot@github.com"
           git config --global user.name "Draft Bot"
-git add draft_intel.json
+          git add draft_intel.json
           git diff --cached --quiet || git commit -m "Update draft intel [skip ci]"
           git push
