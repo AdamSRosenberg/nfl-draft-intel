@@ -284,6 +284,46 @@ CONNECTION_SIGNALS = {
 }
 WEIGHTS = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
+# ─────────────────────────────────────────────
+# 2026 NFL DRAFT ORDER (Round 1)
+# ─────────────────────────────────────────────
+DRAFT_ORDER = {
+    "Raiders": 1,
+    "Jets": 2,
+    "Cardinals": 3,
+    "Patriots": 4,
+    "Giants": 5,
+    "Browns": 6,
+    "Commanders": 7,
+    "Saints": 8,
+    "Titans": 9,
+    "Bengals": 10,
+    "Dolphins": 11,
+    "Cowboys": 12,
+    "Rams": 13,
+    "Ravens": 14,
+    "Buccaneers": 15,
+    "Falcons": 16,
+    "Lions": 17,
+    "Vikings": 18,
+    "Panthers": 19,
+    "Steelers": 21,
+    "Chargers": 22,
+    "Eagles": 23,
+    "Bears": 25,
+    "Bills": 26,
+    "49ers": 27,
+    "Texans": 28,
+    "Colts": 29,
+    "Jaguars": 30,
+    "Packers": 31,
+    "Seahawks": 32,
+    # Teams without a Round 1 pick (traded away):
+    # Chiefs, Broncos, Colts picks may be via trade
+}
+
+
+
 FEEDS = {
     "Raiders":    ["https://www.silverandblackpride.com/rss/current.xml", "https://www.reviewjournal.com/sports/raiders-nfl/feed/"],
     "Browns":     ["https://www.dawgpounddaily.com/rss/current.xml", "https://www.cleveland.com/browns/rss"],
@@ -563,6 +603,14 @@ def score_article(article, prospect, team):
                 score += 2
             elif dist < 300:
                 score += 1
+        # Boost score if team's pick slot is close to prospect's consensus rank
+        prospect_rank = TOP_PROSPECTS.get(prospect, {}).get("consensus_rank", 999)
+        team_pick = DRAFT_ORDER.get(team, 999)
+        pick_diff = abs(prospect_rank - team_pick)
+        if pick_diff <= 3:
+            score += 3  # Very likely range
+        elif pick_diff <= 8:
+            score += 1  # Plausible range
     return score, matched_signals[:3], matched_level[:3]
 
 # ─────────────────────────────────────────────
