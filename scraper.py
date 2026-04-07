@@ -51,13 +51,27 @@ REDDIT_FEEDS = [
 ]
 
 EXTRA_NEWS_SOURCES = [
-    "https://www.espn.com/espn/rss/nfl/news",
+    # NFL Draft specialists
+    "https://www.draftnetwork.com/feed",
+    "https://www.walterfootball.com/rss.xml",
+    "https://www.cbssports.com/rss/headlines/nfl/draft/",
+    "https://overthecap.com/feed",
+    "https://www.pff.com/feed",
+    "https://www.profootballnetwork.com/feed/",
+    "https://www.si.com/nfl/draft/rss",
+    # National NFL coverage
     "https://www.nfl.com/rss/rsslanding?searchString=draft",
     "https://profootballtalk.nbcsports.com/feed/",
-    "https://overthecap.com/feed",
-    "https://www.draftnetwork.com/feed",
     "https://www.theringer.com/rss/nfl/index.xml",
     "https://syndication.bleacherreport.com/streams/teams/feed.xml?team_id=1&sport_id=1",
+    "https://sports.yahoo.com/nfl/rss.xml",
+    "https://www.sportingnews.com/us/nfl/rss",
+    "https://touchdownwire.usatoday.com/feed/",
+    "https://www.foxsports.com/rss-feeds?category=nfl",
+    "https://www.usatoday.com/sports/nfl/rss",
+    "https://athlonsports.com/nfl/feed",
+    "https://www.nfltraderumors.co/feed/",
+    "https://www.thescore.com/rss/nfl/news",
 ]
 
 def fetch_reddit(prospect, days_back=7):
