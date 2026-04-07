@@ -288,22 +288,22 @@ WEIGHTS = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
 # 2026 NFL DRAFT ORDER (Round 1)
 # ─────────────────────────────────────────────
 DRAFT_ORDER = {
+    # Confirmed 2026 NFL Draft Round 1 order (per NFL.com, ESPN, NBC Sports)
     "Raiders": 1,
-    "Jets": 2,
+    "Jets": 2,        # Also holds pick 16 (from Colts)
     "Cardinals": 3,
-    "Patriots": 4,
+    "Titans": 4,
     "Giants": 5,
     "Browns": 6,
     "Commanders": 7,
     "Saints": 8,
-    "Titans": 9,
+    "Chiefs": 9,
     "Bengals": 10,
     "Dolphins": 11,
-    "Cowboys": 12,
-    "Rams": 13,
+    "Cowboys": 12,    # Also holds pick 20 (via trade)
+    "Rams": 13,       # From Falcons
     "Ravens": 14,
     "Buccaneers": 15,
-    "Falcons": 16,
     "Lions": 17,
     "Vikings": 18,
     "Panthers": 19,
@@ -314,13 +314,14 @@ DRAFT_ORDER = {
     "Bills": 26,
     "49ers": 27,
     "Texans": 28,
-    "Colts": 29,
-    "Jaguars": 30,
-    "Packers": 31,
-    "Seahawks": 32,
-    # Teams without a Round 1 pick (traded away):
-    # Chiefs, Broncos, Colts picks may be via trade
+    "Patriots": 31,
+    "Seahawks": 32,   # Super Bowl LX champions
+    # Teams with NO Round 1 pick in 2026 (traded away):
+    # Falcons (traded to Rams), Colts (traded to Jets),
+    # Packers, Jaguars, Broncos (traded for Jaylen Waddle)
 }
+
+NO_ROUND1_PICK = {"Falcons", "Colts", "Packers", "Jaguars", "Broncos"}
 
 
 
