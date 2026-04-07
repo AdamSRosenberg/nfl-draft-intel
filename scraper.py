@@ -830,90 +830,57 @@ def aggregate(refresh=False):
 
 def generate_mock_draft(prospects):
     """
-    Signal-driven Round 1 mock draft.
-    Logic:
-    1. If a prospect has strong beat reporter signal to a specific team -> use it
-    2. If consensus rank closely matches team's pick number (within 3) -> treat as consensus lock
-    3. Otherwise fall back to best available by consensus rank
-    Confidence:
-    - HIGH: strong signal (score>=15) OR consensus rank matches pick exactly
-    - MEDIUM: moderate signal OR rank within 3 picks
-    - LOW: pure best-available fallback
+    Composite-scored Round 1 mock draft.
+    Each pick scores every available prospect by:
+    - Consensus rank match to pick number (exact = +50, 1-off = +20, within 3 = +5)
+    - Beat reporter signal score for that specific team
+    Highest composite wins. Confidence reflects whether it's a lock, signal-driven, or fallback.
     """
     draft_slots = sorted(DRAFT_ORDER.items(), key=lambda x: x[1])
-    available = [dict(p) for p in prospects]
     used = set()
     mock = []
 
     for team, pick_num in draft_slots:
+        available = [p for p in prospects if p["name"] not in used]
+        if not available:
+            continue
+
         best = None
-        best_score = -1
-        best_type = "fallback"
+        best_meta = {}
+        best_composite = -999
 
-        # 1. Find prospect with strongest DIRECT signal to this team
         for p in available:
-            if p["name"] in used:
-                continue
             td = next((t for t in (p.get("teams") or []) if t["team"] == team), None)
-            if td and td["score"] > best_score:
-                best_score = td["score"]
-                best = p
-                best_type = "signal"
-
-        # 2. Check for consensus lock: prospect's rank matches pick number closely
-        # If the consensus match is better than the signal match, use it
-        for p in available:
-            if p["name"] in used:
-                continue
+            signal = td["score"] if td else 0
             rank = p.get("consensus_rank") or 999
-            rank_diff = abs(rank - pick_num)
-            if rank_diff <= 1:  # Exact or 1-off consensus match
-                td = next((t for t in (p.get("teams") or []) if t["team"] == team), None)
-                consensus_signal = (td["score"] if td else 0) + 20  # consensus lock bonus
-                if consensus_signal > best_score or best_type == "fallback":
-                    best_score = consensus_signal
-                    best = p
-                    best_type = "consensus"
-                    break
+            diff = abs(rank - pick_num)
 
-        # 3. Fall back to best available by consensus rank
-        if not best or (best_type == "signal" and best_score < 3):
-            remaining = [p for p in available if p["name"] not in used]
-            if not remaining:
-                continue
-            fallback = min(remaining, key=lambda p: p.get("consensus_rank") or 999)
-            if best_type != "consensus":
-                best = fallback
-                best_score = 0
-                best_type = "fallback"
+            composite = signal
+            if diff == 0:    composite += 50
+            elif diff == 1:  composite += 20
+            elif diff <= 3:  composite += 5
+            elif diff > 10:  composite -= 10
+
+            if composite > best_composite:
+                best_composite = composite
+                best = p
+                best_meta = {"td": td, "signal": signal, "rank": rank, "diff": diff}
 
         if not best:
             continue
 
         used.add(best["name"])
-        td = next((t for t in (best.get("teams") or []) if t["team"] == team), None)
-        rank = best.get("consensus_rank") or 999
-        rank_diff = abs(rank - pick_num)
+        td = best_meta["td"]
+        signal = best_meta["signal"]
+        diff = best_meta["diff"]
 
-        # Confidence based on type
-        if best_type == "consensus" and rank_diff == 0:
-            confidence = "HIGH"
-            note = "Consensus lock"
-        elif best_type == "consensus" and rank_diff <= 1:
-            confidence = "HIGH"
-            note = "Consensus fit"
-        elif best_type == "signal" and best_score >= 15:
-            confidence = "HIGH"
-            note = "Strong signal"
-        elif best_type == "signal" and best_score >= 5:
-            confidence = "MEDIUM"
-            note = "Signal-driven"
-        elif rank_diff <= 3:
-            confidence = "MEDIUM"
-            note = "Consensus range"
-        else:
-            confidence = "LOW"
-            note = "Best available"
+        if diff == 0 and signal >= 10:   confidence, note = "HIGH", "Consensus lock + signal"
+        elif diff == 0:                   confidence, note = "HIGH", "Consensus lock"
+        elif signal >= 15 and diff <= 5: confidence, note = "HIGH", "Strong signal"
+        elif diff == 1:                   confidence, note = "HIGH", "Consensus fit"
+        elif signal >= 8:                 confidence, note = "MEDIUM", "Signal-driven"
+        elif diff <= 5:                   confidence, note = "MEDIUM", "Consensus range"
+        else:                             confidence, note = "LOW", "Best available"
 
         mock.append({
             "pick": pick_num,
@@ -922,7 +889,7 @@ def generate_mock_draft(prospects):
             "pos": best.get("pos", ""),
             "college": best.get("college", ""),
             "consensus_rank": best.get("consensus_rank"),
-            "signal_score": td["score"] if td else 0,
+            "signal_score": signal,
             "top_signals": (td or {}).get("top_signals", [])[:2],
             "confidence": confidence,
             "note": note,
