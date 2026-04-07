@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Draft Intel 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+    --text:#e8e8f0;--muted:#666680;--dim:#333348;
+    --accent:#4f7fff;--green:#2dcc6f;--red:#ff4d6d;--amber:#ffb84d;
+    --mono:'IBM Plex Mono',monospace;--sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh}
+  .shell{max-width:1100px;margin:0 auto;padding:32px 24px 80px}
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;gap:16px;flex-wrap:wrap}
+  .header h1{font-size:22px;font-weight:600;color:#fff;letter-spacing:-.3px}
+  .header .sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+  .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-family:var(--mono)}
+  .stat-val{font-size:22px;font-weight:600;color:#fff}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .ai-panel{background:var(--surface);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:12px;padding:20px 24px;margin-bottom:28px}
+  .ai-label{font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.1em;font-weight:500;margin-bottom:14px}
+  .ai-content{font-size:14px;color:var(--text);line-height:1.8}
+  .ai-content strong{color:#fff;font-weight:500}
+  .ai-content em{color:var(--amber);font-style:normal;font-weight:500}
+  .ai-thinking{display:flex;gap:4px;align-items:center;color:var(--muted);font-size:13px;font-family:var(--mono)}
+  .ai-thinking span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);animation:bounce .8s ease-in-out infinite}
+  .ai-thinking span:nth-child(2){animation-delay:.15s}
+  .ai-thinking span:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .section-head{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .section-head::after{content:'';flex:1;height:1px;background:var(--border)}
+  .movers-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
+  .mover-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .mover-head{padding:10px 16px;font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;font-weight:500;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+  .mover-head.rising{color:var(--green)}
+  .mover-head.falling{color:var(--red)}
+  .mover-item{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);gap:10px}
+  .mover-item:last-child{border-bottom:none}
+  .mover-name{font-size:13px;font-weight:500;color:#fff}
+  .mover-reason{font-size:11px;color:var(--muted);margin-top:1px}
+  .mover-delta{font-size:13px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+  .mover-delta.up{color:var(--green)}
+  .mover-delta.down{color:var(--red)}
+  .headlines-ticker{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:28px}
+  .ticker-head{padding:8px 16px;font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .ticker-item{display:flex;gap:12px;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
+  .ticker-item:last-child{border-bottom:none}
+  .ticker-team{font-family:var(--mono);font-size:10px;color:var(--accent);white-space:nowrap;min-width:70px;margin-top:2px}
+  .ticker-prospect{font-weight:500;color:#fff;margin-right:4px}
+  .ticker-source{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+  .ticker-date{font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+  .board-header{display:grid;grid-template-columns:36px 1fr 60px 80px 110px 100px;padding:6px 14px;font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;gap:8px;margin-bottom:4px}
+  .player-row{display:grid;grid-template-columns:36px 1fr 60px 80px 110px 100px;align-items:center;padding:11px 14px;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer;transition:border-color .15s}
+  .player-row:hover{border-color:var(--border2)}
+  .player-row.expanded{border-color:var(--accent);border-radius:8px 8px 0 0;margin-bottom:0}
+  .rank{font-size:13px;color:var(--muted);font-family:var(--mono);font-weight:500}
+  .player-name{font-size:14px;font-weight:500;color:#fff}
+  .player-school{font-size:11px;color:var(--muted)}
+  .pos-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;font-family:var(--mono);font-weight:500;background:rgba(79,127,255,.15);color:#7fa8ff;margin-left:6px}
+  .trend-val{font-size:12px;font-weight:600;font-family:var(--mono)}
+  .trend-val.up{color:var(--green)}
+  .trend-val.down{color:var(--red)}
+  .trend-val.flat{color:var(--muted)}
+  .signal-bar-bg{height:4px;background:var(--dim);border-radius:2px}
+  .signal-bar-fill{height:100%;border-radius:2px}
+  .signal-score{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+  .landing-team{font-size:13px;font-weight:500;color:#fff}
+  .landing-conf{font-size:10px;color:var(--muted);font-family:var(--mono)}
+  .expand-btn{font-size:11px;color:var(--muted);text-align:right;font-family:var(--mono)}
+  .detail-panel{background:var(--surface2);border:1px solid var(--accent);border-top:none;border-radius:0 0 8px 8px;padding:16px 14px;margin-bottom:4px}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .detail-section-title{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+  .team-bar-row{display:grid;grid-template-columns:90px 1fr 36px;gap:8px;align-items:center;margin-bottom:8px}
+  .team-bar-label{font-size:12px;font-weight:500;color:#fff}
+  .tb-bar-bg{height:5px;background:var(--dim);border-radius:2px}
+  .tb-bar-fill{height:100%;border-radius:2px}
+  .tb-score{font-size:11px;color:var(--muted);font-family:var(--mono);text-align:right}
+  .signal-pill{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin:1px;font-family:var(--mono)}
+  .signal-pill.HIGH{background:rgba(45,204,111,.15);color:#2dcc6f}
+  .signal-pill.MEDIUM{background:rgba(79,127,255,.15);color:#7fa8ff}
+  .signal-pill.LOW{background:rgba(255,255,255,.06);color:var(--muted)}
+  .headlines-list{display:flex;flex-direction:column;gap:7px}
+  .headline-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
+  .headline-source{font-size:10px;color:var(--accent);font-family:var(--mono);margin-bottom:3px}
+  .headline-text{font-size:12px;color:var(--text);line-height:1.5}
+  .headline-date{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+  .loading-state{text-align:center;padding:80px 24px;color:var(--muted);font-family:var(--mono);font-size:13px}
+  .error-state{background:var(--surface);border:1px solid rgba(255,77,109,.3);border-radius:10px;padding:20px 24px;color:var(--red);font-family:var(--mono);font-size:13px;margin-bottom:28px}
+  .refresh-btn{display:inline-block;margin-top:12px;padding:8px 18px;background:none;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-family:var(--mono);font-size:12px;cursor:pointer}
+  .refresh-btn:hover{background:rgba(79,127,255,.1)}
+  .update-bar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .update-bar a{color:var(--accent);text-decoration:none}
+  @media(max-width:700px){
+    .stats-bar{grid-template-columns:repeat(2,1fr)}
+    .board-header,.player-row{grid-template-columns:28px 1fr 50px 70px}
+    .board-header .h3,.board-header .h4,.board-header .h5,
+    .player-row .col3,.player-row .col4,.player-row .col5{display:none}
+    .movers-grid{grid-template-columns:1fr}
+    .detail-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="header">
+    <div>
+      <h1><span class="status-dot"></span>NFL Draft Intel 2026</h1>
+      <div class="sub">Apr 23–25 · Pittsburgh · Beat reporters + local outlets · No ESPN · Auto-updates 7am ET daily</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="run-time">Loading...</div>
+      <button class="refresh-btn" style="margin-top:6px" onclick="loadData()">↺ Refresh</button>
+    </div>
+  </div>
+
+  <div id="loading-state" class="loading-state">
+    <div class="ai-thinking" style="justify-content:center;margin-bottom:12px"><span></span><span></span><span></span></div>
+    Loading beat reporter intel...
+  </div>
+
+  <div id="main-content" style="display:none">
+
+    <div class="update-bar">
+      <span>Data auto-updates every morning at 7am ET via GitHub Actions. <a href="https://github.com/AdamSRosenberg/nfl-draft-intel/actions" target="_blank">View run history →</a></span>
+      <span id="data-age"></span>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-label">Prospects tracked</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">verified 2026 class</div></div>
+      <div class="stat-card"><div class="stat-label">With signal</div><div class="stat-val" id="s-signal">—</div><div class="stat-sub">active intel found</div></div>
+      <div class="stat-card"><div class="stat-label">Hottest prospect</div><div class="stat-val" id="s-hot" style="font-size:16px">—</div><div class="stat-sub" id="s-hot-sub">highest signal score</div></div>
+      <div class="stat-card"><div class="stat-label">Days to draft</div><div class="stat-val" id="s-days">—</div><div class="stat-sub">Round 1: Apr 23</div></div>
+    </div>
+
+    <div class="ai-panel">
+      <div class="ai-label">Claude AI Analysis — updated daily</div>
+      <div id="ai-output" class="ai-content">
+        <div class="ai-thinking"><span></span><span></span><span></span>&nbsp; Analyzing today's signals...</div>
+      </div>
+    </div>
+
+    <div class="section-head">Signal movers</div>
+    <div class="movers-grid" id="movers-grid"></div>
+
+    <div class="section-head">Latest beat reporter headlines</div>
+    <div class="headlines-ticker">
+      <div class="ticker-head"><span class="status-dot"></span>Live intel feed</div>
+      <div id="ticker-list"></div>
+    </div>
+
+    <div class="section-head">Full signal board — click any prospect to expand</div>
+    <div class="board-header">
+      <span>#</span><span>Prospect</span>
+      <span>Trend</span><span>Signal</span>
+      <span>Top landing</span><span>Confidence</span>
+    </div>
+    <div id="board-list"></div>
+
+  </div>
+
+</div>
+
+<script>
+let currentData = null;
+let expandedPlayer = null;
+
+async function loadData() {
+  document.getElementById('loading-state').style.display = 'block';
+  document.getElementById('main-content').style.display = 'none';
+
+  try {
+    const r = await fetch('draft_intel.json?t=' + Date.now());
+    if (!r.ok) throw new Error('No data file yet');
+    const data = await r.json();
+    currentData = data;
+    render(data);
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('loading-state').innerHTML = `
+      <div style="color:var(--red);margin-bottom:12px">No draft_intel.json found yet.</div>
+      <div style="color:var(--muted);margin-bottom:16px">Run the GitHub Actions workflow manually to generate the first data file.</div>
+      <a href="https://github.com/AdamSRosenberg/nfl-draft-intel/actions" target="_blank" class="refresh-btn">Go to GitHub Actions →</a>`;
+  }
+}
+
+function render(data) {
+  const gen = new Date(data.generated_at);
+  const now = new Date();
+  const hoursAgo = Math.round((now - gen) / 3600000);
+  document.getElementById('run-time').textContent = gen.toLocaleString();
+  document.getElementById('data-age').textContent = hoursAgo < 1 ? 'Updated just now' : `Updated ${hoursAgo}h ago`;
+
+  const withSignal = data.prospects.filter(p => p.total_signal_score > 0);
+  const hottest = withSignal[0];
+  const draftDate = new Date('2026-04-23');
+  const days = Math.max(0, Math.round((draftDate - now) / 86400000));
+
+  document.getElementById('s-total').textContent = data.prospects.length;
+  document.getElementById('s-signal').textContent = withSignal.length;
+  document.getElementById('s-hot').textContent = hottest ? hottest.name.split(' ').slice(-1)[0] : '—';
+  document.getElementById('s-hot-sub').textContent = hottest ? hottest.total_signal_score + ' pts signal' : '—';
+  document.getElementById('s-days').textContent = days;
+
+  runAI(data);
+  renderMovers(data);
+  renderTicker(data);
+  renderBoard(data);
+}
+
+async function runAI(data) {
+  const output = document.getElementById('ai-output');
+  const top = data.prospects.filter(p => p.total_signal_score > 0).slice(0, 8);
+  const summary = top.map(p => {
+    const teams = p.teams.slice(0,3).map(t => `${t.team}(${t.score}pts,signals:${t.top_signals.slice(0,2).join(',')})`).join('|');
+    return `${p.name}[${p.pos},rank#${p.consensus_rank}] signal:${p.total_signal_score} teams:${teams}`;
+  }).join('\n');
+
+  const headlines = data.prospects.flatMap(p =>
+    p.teams.flatMap(t => t.top_articles.map(a => `${p.name}→${t.team}:"${a.title}"(${a.source})`))
+  ).slice(0, 15).join('\n');
+
+  const prompt = `You are an NFL Draft intelligence analyst. 2026 NFL Draft is April 23-25 in Pittsburgh. Data scraped from beat reporters today (NOT ESPN).
+
+SIGNAL DATA:
+${summary}
+
+HEADLINES:
+${headlines}
+
+Give sharp, actionable analysis for a bettor. Format with these exact sections:
+
+**LOCKS** — 2 player-team connections that are essentially confirmed. Why.
+
+**RISING** — 2 prospects generating more signal than their consensus rank suggests. What beat reporters are saying.
+
+**FALLING/QUIET** — 1-2 prospects surprisingly quiet given their ranking. What that silence means.
+
+**BETTING EDGE** — The 2-3 sharpest plays based purely on this intel. Be specific.
+
+Keep it tight and actionable. No fluff.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const result = await resp.json();
+    const text = result.content?.[0]?.text || '';
+    output.innerHTML = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  } catch(e) {
+    output.innerHTML = buildStaticAnalysis(currentData);
+  }
+}
+
+function buildStaticAnalysis(data) {
+  const top = data.prospects.filter(p => p.total_signal_score > 0);
+  if (!top.length) return 'No signal data yet — run the scraper to populate intel.';
+
+  const locks = top.slice(0, 2).map(p => {
+    const t = p.teams[0];
+    return `<strong>${p.name} → ${t.team}</strong>: ${t.top_signals.slice(0,2).join(', ')} (score: ${t.score})`;
+  }).join('<br>');
+
+  const risers = top.filter(p => p.consensus_rank > 5).slice(0, 2).map(p => {
+    const t = p.teams[0];
+    return `<strong>${p.name}</strong> (consensus #${p.consensus_rank}) → ${t.team} generating ${p.total_signal_score}pts signal`;
+  }).join('<br>');
+
+  return `<strong>LOCKS</strong><br>${locks}<br><br><strong>RISING</strong><br>${risers}<br><br><em>Paste this JSON into Claude.ai chat for deeper AI analysis and betting recommendations.</em>`;
+}
+
+function renderMovers(data) {
+  const withSignal = data.prospects.filter(p => p.total_signal_score > 0);
+  const sorted = [...withSignal].sort((a,b) => b.total_signal_score - a.total_signal_score);
+  const risers = sorted.slice(0, 4);
+  const quiet = data.prospects.filter(p => p.total_signal_score === 0).slice(0, 4);
+
+  document.getElementById('movers-grid').innerHTML = `
+    <div class="mover-panel">
+      <div class="mover-head rising">↑ Rising — strong signal</div>
+      ${risers.map(p => {
+        const t = p.teams[0];
+        return `<div class="mover-item">
+          <div><div class="mover-name">${p.name} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
+          <div class="mover-reason">${t?.team||'—'}: ${t?.top_signals?.[0]||'signal detected'}</div></div>
+          <div class="mover-delta up">+${p.total_signal_score}pts</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="mover-panel">
+      <div class="mover-head falling">↓ Quiet — no signal</div>
+      ${quiet.map(p => `<div class="mover-item">
+        <div><div class="mover-name">${p.name} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
+        <div class="mover-reason">No beat reporter activity</div></div>
+        <div class="mover-delta down">silent</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+function renderTicker(data) {
+  const articles = data.prospects.flatMap(p =>
+    p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, prospect: p.name, team: t.team})))
+  ).filter(a => a.title).sort((a,b) => new Date(b.published||0) - new Date(a.published||0));
+
+  document.getElementById('ticker-list').innerHTML = articles.slice(0, 12).map(a => {
+    const d = a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    return `<div class="ticker-item">
+      <div class="ticker-team">${a.team}</div>
+      <div style="flex:1">
+        <div><span class="ticker-prospect">${a.prospect}</span>
+        <a href="${a.link}" target="_blank" style="color:var(--text);text-decoration:none">${a.title}</a></div>
+        <div class="ticker-source">${a.source}</div>
+      </div>
+      <div class="ticker-date">${d}</div>
+    </div>`;
+  }).join('') || '<div style="padding:16px;color:var(--muted);font-family:var(--mono);font-size:12px">No headlines yet — run scraper for live data</div>';
+}
+
+function barColor(score) {
+  if (score >= 30) return '#4f7fff';
+  if (score >= 18) return '#2dcc6f';
+  if (score >= 8)  return '#ffb84d';
+  return '#666680';
+}
+
+function renderBoard(data) {
+  const sorted = [...data.prospects].sort((a,b) => b.total_signal_score - a.total_signal_score);
+  const maxScore = Math.max(...sorted.map(p => p.total_signal_score), 1);
+
+  document.getElementById('board-list').innerHTML = sorted.map((p, i) => {
+    const topTeam = p.teams?.[0];
+    const pct = Math.round(p.total_signal_score / maxScore * 100);
+    const color = barColor(p.total_signal_score);
+    const isExp = expandedPlayer === p.name;
+    const trendDiff = p.consensus_rank - (i + 1);
+    const trendStr = trendDiff > 0 ? `+${trendDiff}` : trendDiff < 0 ? `${trendDiff}` : '—';
+    const trendClass = trendDiff > 0 ? 'up' : trendDiff < 0 ? 'down' : 'flat';
+    const conf = topTeam ? Math.min(95, Math.round(topTeam.score / maxScore * 90 + 10)) : 0;
+
+    let detail = '';
+    if (isExp && p.teams.length) {
+      const maxT = Math.max(...p.teams.map(t => t.score), 1);
+      const allH = p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, team:t.team})));
+      detail = `<div class="detail-panel"><div class="detail-grid">
+        <div>
+          <div class="detail-section-title">Team interest</div>
+          ${p.teams.slice(0,5).map(t => `
+            <div class="team-bar-row">
+              <div class="team-bar-label">${t.team}</div>
+              <div class="tb-bar-bg"><div class="tb-bar-fill" style="width:${Math.round(t.score/maxT*100)}%;background:${barColor(t.score)}"></div></div>
+              <div class="tb-score">${t.score}</div>
+            </div>
+            <div style="margin-bottom:10px">${(t.top_signals||[]).map((s,si) => `<span class="signal-pill ${t.signal_levels?.[si]||'LOW'}">${s}</span>`).join('')}</div>
+          `).join('')}
+        </div>
+        <div>
+          <div class="detail-section-title">Headlines</div>
+          <div class="headlines-list">
+            ${allH.slice(0,4).map(a => {
+              const d = a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+              return `<div class="headline-item">
+                <div class="headline-source">${a.team} · ${a.source}</div>
+                <div class="headline-text"><a href="${a.link}" target="_blank" style="color:var(--text);text-decoration:none">${a.title}</a></div>
+                <div class="headline-date">${d}</div>
+              </div>`;
+            }).join('') || '<div style="color:var(--muted);font-size:12px">No headlines yet</div>'}
+          </div>
+        </div>
+      </div></div>`;
+    }
+
+    return `<div class="player-row${isExp?' expanded':''}" onclick="toggle('${p.name}')">
+      <div class="rank">${p.consensus_rank}</div>
+      <div>
+        <div class="player-name">${p.name}<span class="pos-badge">${p.pos}</span></div>
+        <div class="player-school">${p.college}</div>
+      </div>
+      <div class="trend-val ${trendClass}">${trendStr}</div>
+      <div>
+        <div class="signal-bar-bg"><div class="signal-bar-fill" style="width:${p.total_signal_score>0?pct:3}%;background:${color}"></div></div>
+        <div class="signal-score">${p.total_signal_score}pts</div>
+      </div>
+      <div>
+        <div class="landing-team">${topTeam?.team||'—'}</div>
+        <div class="landing-conf">${topTeam?'top signal':''}</div>
+      </div>
+      <div>
+        <div class="landing-team">${topTeam?conf+'%':''}</div>
+        <div class="expand-btn">${isExp?'▲ close':'▼ detail'}</div>
+      </div>
+    </div>${detail}`;
+  }).join('');
+}
+
+function toggle(name) {
+  expandedPlayer = expandedPlayer === name ? null : name;
+  if (currentData) renderBoard(currentData);
+}
+
+loadData();
+</script>
+</body>
+</html>
