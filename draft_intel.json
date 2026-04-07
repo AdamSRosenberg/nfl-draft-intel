@@ -5905,18 +5905,35 @@
     {
       "pick": 1,
       "team": "Raiders",
-      "prospect": "Arvell Reese",
-      "pos": "EDGE",
-      "college": "Ohio State",
-      "consensus_rank": 2,
-      "signal_score": 0,
-      "top_signals": [],
+      "prospect": "Fernando Mendoza",
+      "pos": "QB",
+      "college": "Indiana",
+      "consensus_rank": 1,
+      "signal_score": 14,
+      "top_signals": [
+        "mock"
+      ],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock + signal"
     },
     {
       "pick": 2,
       "team": "Jets",
+      "prospect": "Arvell Reese",
+      "pos": "EDGE",
+      "college": "Ohio State",
+      "consensus_rank": 2,
+      "signal_score": 29,
+      "top_signals": [
+        "mock",
+        "first pick"
+      ],
+      "confidence": "HIGH",
+      "note": "Consensus lock + signal"
+    },
+    {
+      "pick": 3,
+      "team": "Cardinals",
       "prospect": "Jeremiyah Love",
       "pos": "RB",
       "college": "Notre Dame",
@@ -5924,11 +5941,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 3,
-      "team": "Cardinals",
+      "pick": 4,
+      "team": "Titans",
       "prospect": "Sonny Styles",
       "pos": "LB",
       "college": "Ohio State",
@@ -5936,11 +5953,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 4,
-      "team": "Titans",
+      "pick": 5,
+      "team": "Giants",
       "prospect": "Caleb Downs",
       "pos": "S",
       "college": "Ohio State",
@@ -5948,25 +5965,23 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 5,
-      "team": "Giants",
-      "prospect": "Francis Mauigoa",
-      "pos": "OT",
-      "college": "Miami",
-      "consensus_rank": 6,
-      "signal_score": 6,
-      "top_signals": [
-        "could be"
-      ],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
       "pick": 6,
       "team": "Browns",
+      "prospect": "Francis Mauigoa",
+      "pos": "OT",
+      "college": "Miami",
+      "consensus_rank": 6,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "HIGH",
+      "note": "Consensus lock"
+    },
+    {
+      "pick": 7,
+      "team": "Commanders",
       "prospect": "David Bailey",
       "pos": "EDGE",
       "college": "Texas Tech",
@@ -5974,11 +5989,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 7,
-      "team": "Commanders",
+      "pick": 8,
+      "team": "Saints",
       "prospect": "Rueben Bain Jr",
       "pos": "EDGE",
       "college": "Miami",
@@ -5986,35 +6001,41 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 8,
-      "team": "Saints",
-      "prospect": "Carnell Tate",
-      "pos": "WR",
-      "college": "Ohio State",
-      "consensus_rank": 9,
-      "signal_score": 0,
-      "top_signals": [],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
       "pick": 9,
       "team": "Chiefs",
-      "prospect": "Makai Lemon",
+      "prospect": "Carnell Tate",
       "pos": "WR",
-      "college": "USC",
-      "consensus_rank": 10,
-      "signal_score": 0,
-      "top_signals": [],
+      "college": "Ohio State",
+      "consensus_rank": 9,
+      "signal_score": 26,
+      "top_signals": [
+        "visited",
+        "trade up"
+      ],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock + signal"
     },
     {
       "pick": 10,
       "team": "Bengals",
+      "prospect": "Makai Lemon",
+      "pos": "WR",
+      "college": "USC",
+      "consensus_rank": 10,
+      "signal_score": 9,
+      "top_signals": [
+        "workout",
+        "scout"
+      ],
+      "confidence": "HIGH",
+      "note": "Consensus lock"
+    },
+    {
+      "pick": 11,
+      "team": "Dolphins",
       "prospect": "Kenyon Sadiq",
       "pos": "TE",
       "college": "Oregon",
@@ -6022,11 +6043,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 11,
-      "team": "Dolphins",
+      "pick": 12,
+      "team": "Cowboys",
       "prospect": "Jordyn Tyson",
       "pos": "WR",
       "college": "Arizona State",
@@ -6034,11 +6055,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 12,
-      "team": "Cowboys",
+      "pick": 13,
+      "team": "Rams",
       "prospect": "Mansoor Delane",
       "pos": "CB",
       "college": "LSU",
@@ -6046,11 +6067,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 13,
-      "team": "Rams",
+      "pick": 14,
+      "team": "Ravens",
       "prospect": "Spencer Fano",
       "pos": "OT",
       "college": "Utah",
@@ -6058,11 +6079,11 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
-      "pick": 14,
-      "team": "Ravens",
+      "pick": 15,
+      "team": "Buccaneers",
       "prospect": "Monroe Freeling",
       "pos": "OT",
       "college": "Georgia",
@@ -6070,19 +6091,7 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 15,
-      "team": "Buccaneers",
-      "prospect": "Ty Simpson",
-      "pos": "QB",
-      "college": "Alabama",
-      "consensus_rank": 16,
-      "signal_score": 0,
-      "top_signals": [],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
       "pick": 17,
@@ -6101,18 +6110,6 @@
     {
       "pick": 18,
       "team": "Vikings",
-      "prospect": "Kadyn Proctor",
-      "pos": "OT",
-      "college": "Alabama",
-      "consensus_rank": 19,
-      "signal_score": 0,
-      "top_signals": [],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 19,
-      "team": "Panthers",
       "prospect": "Jermod McCoy",
       "pos": "CB",
       "college": "Tennessee",
@@ -6120,26 +6117,23 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
+    },
+    {
+      "pick": 19,
+      "team": "Panthers",
+      "prospect": "Kadyn Proctor",
+      "pos": "OT",
+      "college": "Alabama",
+      "consensus_rank": 19,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "HIGH",
+      "note": "Consensus lock"
     },
     {
       "pick": 21,
       "team": "Steelers",
-      "prospect": "Peter Woods",
-      "pos": "DL",
-      "college": "Clemson",
-      "consensus_rank": 22,
-      "signal_score": 9,
-      "top_signals": [
-        "will take",
-        "mock"
-      ],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 22,
-      "team": "Chargers",
       "prospect": "Dillon Thieneman",
       "pos": "S",
       "college": "Oregon",
@@ -6147,7 +6141,19 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
+    },
+    {
+      "pick": 22,
+      "team": "Chargers",
+      "prospect": "Peter Woods",
+      "pos": "DL",
+      "college": "Clemson",
+      "consensus_rank": 22,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "HIGH",
+      "note": "Consensus lock"
     },
     {
       "pick": 23,
@@ -6188,6 +6194,18 @@
     {
       "pick": 27,
       "team": "49ers",
+      "prospect": "Anthony Hill Jr",
+      "pos": "LB",
+      "college": "Texas",
+      "consensus_rank": 27,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "HIGH",
+      "note": "Consensus lock"
+    },
+    {
+      "pick": 28,
+      "team": "Texans",
       "prospect": "Keldric Faulk",
       "pos": "EDGE",
       "college": "Auburn",
@@ -6195,23 +6213,23 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 28,
-      "team": "Texans",
-      "prospect": "Emmanuel McNeil-Warren",
-      "pos": "S",
-      "college": "Toledo",
-      "consensus_rank": 29,
-      "signal_score": 0,
-      "top_signals": [],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     },
     {
       "pick": 31,
       "team": "Patriots",
+      "prospect": "Harold Perkins Jr",
+      "pos": "LB",
+      "college": "LSU",
+      "consensus_rank": 31,
+      "signal_score": 0,
+      "top_signals": [],
+      "confidence": "HIGH",
+      "note": "Consensus lock"
+    },
+    {
+      "pick": 32,
+      "team": "Seahawks",
       "prospect": "Caleb Lomu",
       "pos": "OT",
       "college": "Utah",
@@ -6219,19 +6237,7 @@
       "signal_score": 0,
       "top_signals": [],
       "confidence": "HIGH",
-      "note": "Consensus fit"
-    },
-    {
-      "pick": 32,
-      "team": "Seahawks",
-      "prospect": "Zion Young",
-      "pos": "EDGE",
-      "college": "Missouri",
-      "consensus_rank": 33,
-      "signal_score": 0,
-      "top_signals": [],
-      "confidence": "HIGH",
-      "note": "Consensus fit"
+      "note": "Consensus lock"
     }
   ]
 }
