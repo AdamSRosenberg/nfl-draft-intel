@@ -244,6 +244,129 @@ def fetch_feed(url, days_back=90):
         return []
 
 # ─────────────────────────────────────────────
+#  TWITTER/X BEAT REPORTERS (via Nitter RSS)
+#  No API key needed — uses public Nitter mirrors
+# ─────────────────────────────────────────────
+BEAT_REPORTERS = {
+    # National NFL/Draft reporters
+    "TomPelissero":     "GENERAL",
+    "RapSheet":         "GENERAL",
+    "MikeGarafolo":     "GENERAL",
+    "CharlesRobinson":  "GENERAL",
+    "AlbertBreer":      "GENERAL",
+    "PFF_Sam":          "GENERAL",
+    "mike_florio":      "GENERAL",
+    "DanGrazianoESPN":  "GENERAL",
+    "mortreport":       "GENERAL",
+    "AdamSchefter":     "GENERAL",
+    # Team beat reporters
+    "MikeReiss":        "Patriots",
+    "ZackCox33":        "Patriots",
+    "MaryKayCabot":     "Browns",
+    "PaulKuharskyNFL":  "Titans",
+    "BradBiggs":        "Bears",
+    "PatrickFinley":    "Bears",
+    "RalphVacchiano":   "Giants",
+    "jordanraanan":     "Giants",
+    "mattschneidman":   "Packers",
+    "RobDemovsky":      "Packers",
+    "gregauman":        "Buccaneers",
+    "Clarence_Hill_Jr": "Cowboys",
+    "nicki_jhabvala":   "Commanders",
+    "John_Keim":        "Commanders",
+    "BobMcManaman":     "Cardinals",
+    "chrismccloskey":   "Colts",
+    "StaceyDales":      "GENERAL",
+    "ian693":           "GENERAL",
+    "diannaESPN":       "GENERAL",
+}
+
+NITTER_INSTANCES = [
+    "https://nitter.poast.org",
+    "https://nitter.privacydev.net",
+    "https://nitter.1d4.us",
+    "https://nitter.kavin.rocks",
+]
+
+def get_nitter_instance():
+    """Find a working Nitter instance."""
+    for instance in NITTER_INSTANCES:
+        try:
+            r = requests.get(f"{instance}/twitter", timeout=5,
+                           headers={"User-Agent": "Mozilla/5.0"})
+            if r.status_code == 200:
+                return instance
+        except Exception:
+            continue
+    return None
+
+def fetch_twitter(handle, team, nitter_base, days_back=3):
+    """Scrape tweets from a beat reporter via Nitter RSS."""
+    cache_url = f"nitter:{handle}"
+    cached = get_cached(cache_url)
+    if cached:
+        return cached
+
+    cutoff = datetime.now().astimezone() - timedelta(days=days_back)
+    rss_url = f"{nitter_base}/{handle}/rss"
+
+    try:
+        r = requests.get(rss_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
+        if r.status_code != 200:
+            return []
+        feed = feedparser.parse(r.content)
+        tweets = []
+        for entry in feed.entries[:20]:
+            pub_raw = entry.get("published", "")
+            pub_dt = parse_date(pub_raw)
+            if pub_dt:
+                if pub_dt.tzinfo is None:
+                    pub_dt = pub_dt.replace(tzinfo=datetime.now().astimezone().tzinfo)
+                if pub_dt < cutoff:
+                    continue
+            text = BeautifulSoup(entry.get("summary", ""), "html.parser").get_text(" ", strip=True)
+            title = entry.get("title", "")
+            tweets.append({
+                "title":     title[:200],
+                "summary":   text[:400],
+                "link":      entry.get("link", "").replace(nitter_base, "https://twitter.com"),
+                "published": pub_raw,
+                "pub_dt":    pub_dt.isoformat() if pub_dt else "",
+                "source":    f"@{handle} (Twitter)",
+            })
+            if len(tweets) >= 10:
+                break
+        set_cache(cache_url, tweets)
+        return tweets
+    except Exception:
+        return []
+
+def fetch_all_twitter(results, prospects):
+    """Fetch tweets from all beat reporters and score them."""
+    nitter = get_nitter_instance()
+    if not nitter:
+        print("  No Nitter instance available — skipping Twitter scrape")
+        return
+
+    print(f"  Twitter: using {nitter}")
+    for handle, team in BEAT_REPORTERS.items():
+        tweets = fetch_twitter(handle, team, nitter)
+        time.sleep(0.3)
+        for tweet in tweets:
+            for prospect in prospects:
+                score, signals, levels = score_article(tweet, prospect, team)
+                if score > 0:
+                    results[prospect][team]["score"] += score
+                    results[prospect][team]["signals"].extend(signals)
+                    results[prospect][team]["signal_levels"].extend(levels)
+                    results[prospect][team]["articles"].append({
+                        "title":     tweet["title"],
+                        "link":      tweet["link"],
+                        "source":    tweet["source"],
+                        "published": tweet["pub_dt"] or tweet["published"],
+                    })
+
+# ─────────────────────────────────────────────
 #  SCORE
 # ─────────────────────────────────────────────
 def resolve_prospect(name):
@@ -321,6 +444,11 @@ def aggregate(refresh=False):
 
     print()
 
+    # Twitter/X beat reporters
+    print("  Scraping Twitter/X beat reporters via Nitter...")
+    fetch_all_twitter(results, list(TOP_PROSPECTS.keys()))
+    print("  Twitter scrape complete")
+
     # Build structured output
     output = {
         "generated_at": datetime.now().isoformat(),
@@ -366,6 +494,11 @@ def aggregate(refresh=False):
             "total_signal_score": total_score,
             "top_landing_spot": top_team,
             "teams": teams_out,
+            "has_twitter_signal": any(
+                "@" in a.get("source","")
+                for t in teams_out
+                for a in t.get("top_articles",[])
+            ),
         })
 
     # Sort by total signal activity (most buzz first)
