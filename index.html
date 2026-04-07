@@ -125,6 +125,20 @@
   .pick-row.signal-pick{border-color:rgba(79,255,255,0.2);}
   @media(max-width:700px){.mock-draft-grid{grid-template-columns:1fr;}}
 
+
+  .mock-draft-section{margin-bottom:32px;}
+  .mock-pick{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;transition:border-color .15s;}
+  .mock-pick:hover{border-color:var(--accent);}
+  .mock-pick-num{font-size:18px;font-weight:800;color:var(--muted);font-family:var(--mono);text-align:center;}
+  .mock-pick-team{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+  .mock-pick-name{font-size:15px;font-weight:600;color:var(--text);}
+  .mock-pick-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .mock-pick-conf{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;}
+  .mock-pick-conf.HIGH{background:var(--green)22;color:var(--green);}
+  .mock-pick-conf.MEDIUM{background:var(--amber)22;color:var(--amber);}
+  .mock-pick-conf.LOW{background:var(--muted)22;color:var(--muted);}
+  .mock-signals{font-size:10px;color:var(--muted);margin-top:3px;}
+
 </style>
 </head>
 <body>
@@ -153,7 +167,14 @@
       <span id="data-age"></span>
     </div>
 
-    <div style="margin-bottom:24px;"><div style="display:flex;gap:10px;margin-bottom:10px;"><input id="prospectSearch" type="text" placeholder="🔍  Search a prospect..." oninput="doSearch(this.value)"/><button class="s-clear" onclick="document.getElementById('prospectSearch').value='';doSearch('')">&#10005; Clear</button></div><div id="searchOut"></div></div><div class="stats-bar">
+    <div style="margin-bottom:24px;"><div style="display:flex;gap:10px;margin-bottom:10px;"><input id="prospectSearch" type="text" placeholder="🔍  Search a prospect..." oninput="doSearch(this.value)"/><button class="s-clear" onclick="document.getElementById('prospectSearch').value='';doSearch('')">&#10005; Clear</button></div><div id="searchOut"></div></div><div class="mock-draft-section">
+    <div class="section-head" style="margin-bottom:14px;">
+      <span style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">ScottBot Mock Draft — Updated Daily</span>
+      <div style="font-size:11px;color:var(--dim);margin-top:3px;">Signal-driven Round 1 projection. Confidence reflects beat reporter + Reddit intel strength.</div>
+    </div>
+    <div id="mock-draft-board"></div>
+  </div>
+<div class="stats-bar">
       <div class="stat-card"><div class="stat-label">Prospects tracked</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">verified 2026 class</div></div>
       <div class="stat-card"><div class="stat-label">With signal</div><div class="stat-val" id="s-signal">—</div><div class="stat-sub">active intel found</div></div>
       <div class="stat-card"><div class="stat-label">Hottest prospect</div><div class="stat-val" id="s-hot" style="font-size:16px">—</div><div class="stat-sub" id="s-hot-sub">highest signal score</div></div>
@@ -436,6 +457,23 @@ function toggle(name) {
 loadData();
 </script>
 <script>
+function renderMockDraft(picks) {
+  var el = document.getElementById('mock-draft-board');
+  if (!el || !picks || !picks.length) return;
+  el.innerHTML = picks.map(function(p) {
+    var sigs = (p.top_signals||[]).map(function(s){
+      return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 5px;margin-right:3px;font-size:10px;">'+s+'</span>';
+    }).join('');
+    return '<div class="mock-pick">'
+      + '<div><div class="mock-pick-num">' + p.pick + '</div><div class="mock-pick-team">' + p.team + '</div></div>'
+      + '<div><div class="mock-pick-name">' + p.prospect + '</div>'
+      + '<div class="mock-pick-meta">' + p.pos + ' · ' + p.college + (p.consensus_rank ? ' · Consensus #' + p.consensus_rank : '') + '</div>'
+      + (sigs ? '<div class="mock-signals">' + sigs + '</div>' : '')
+      + '</div>'
+      + '<span class="mock-pick-conf ' + p.confidence + '">' + p.confidence + '</span>'
+      + '</div>';
+  }).join('');
+}
 var _sd=null;
 function doSearch(q){
   q=(q||'').trim().toLowerCase();
