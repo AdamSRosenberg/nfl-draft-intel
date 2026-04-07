@@ -739,10 +739,15 @@ def aggregate(refresh=False):
 
     print()
 
-    # Twitter/X beat reporters
-    print("  Scraping Twitter/X beat reporters via Nitter...")
-    fetch_all_twitter(results, list(TOP_PROSPECTS.keys()))
-    print("  Twitter scrape complete")
+    # Google News + Reddit + extra sources
+    print("  Searching Google News + Reddit for each prospect...")
+    fetch_all_google_news(results, list(TOP_PROSPECTS.keys()))
+    print("  Google News + Reddit complete")
+
+    # Extra national NFL sources
+    print("  Scraping extra national sources...")
+    fetch_extra_sources(results, list(TOP_PROSPECTS.keys()))
+    print("  Extra sources complete")
 
     # Build structured output
     output = {
