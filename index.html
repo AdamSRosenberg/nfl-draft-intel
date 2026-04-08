@@ -628,5 +628,29 @@ function initMockDraft() {
   });
 }
 </script>
+<script>
+function patchGeneralLabels() {
+  // Replace all text occurrences of "GENERAL" in the rendered page with a styled badge
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  var nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(node) {
+    if (node.textContent.includes('GENERAL') && node.parentElement && node.parentElement.tagName !== 'SCRIPT' && node.parentElement.tagName !== 'STYLE') {
+      var span = document.createElement('span');
+      span.innerHTML = node.textContent.replace(/GENERAL/g,
+        '<span class="general-tag" title="National buzz &#8212; mentioned by national outlets but not yet linked to a specific team">&#9675; National Intel</span>'
+      );
+      node.parentElement.replaceChild(span, node);
+    }
+  });
+}
+// Run after data loads
+document.addEventListener('DOMContentLoaded', function() {
+  var obs = new MutationObserver(function() { patchGeneralLabels(); });
+  obs.observe(document.body, { childList: true, subtree: true });
+  setTimeout(patchGeneralLabels, 2000);
+  setTimeout(patchGeneralLabels, 5000);
+});
+</script>
 </body>
 </html>
