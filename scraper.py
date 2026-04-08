@@ -387,6 +387,46 @@ CONNECTION_SIGNALS = {
 WEIGHTS = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
 # ─────────────────────────────────────────────
+# TEAM ALIASES — city names, nicknames, coaches, stadiums
+# so "Kansas City" maps to Chiefs, "Foxborough" to Patriots, etc.
+# ─────────────────────────────────────────────
+TEAM_ALIASES = {
+    "Raiders": ["las vegas", "raiders", "silver and black"],
+    "Jets": ["new york jets", "jets", "gang green", "metlife"],
+    "Cardinals": ["arizona", "cardinals", "state farm stadium"],
+    "Titans": ["tennessee", "titans", "nashville", "nissan stadium"],
+    "Giants": ["new york giants", "giants", "big blue"],
+    "Browns": ["cleveland", "browns", "dawg pound"],
+    "Commanders": ["washington", "commanders", "fedex field"],
+    "Saints": ["new orleans", "saints", "superdome"],
+    "Chiefs": ["kansas city", "chiefs", "arrowhead", "andy reid"],
+    "Bengals": ["cincinnati", "bengals", "paycor"],
+    "Dolphins": ["miami", "dolphins", "hardrock", "hard rock"],
+    "Cowboys": ["dallas", "cowboys", "jerry jones", "at&t stadium"],
+    "Rams": ["los angeles rams", "l.a. rams", "sofi stadium"],
+    "Ravens": ["baltimore", "ravens", "lamar jackson", "m&t bank"],
+    "Buccaneers": ["tampa bay", "buccaneers", "bucs", "raymond james"],
+    "Lions": ["detroit", "lions", "ford field"],
+    "Vikings": ["minnesota", "vikings", "us bank"],
+    "Panthers": ["carolina", "panthers", "bank of america"],
+    "Steelers": ["pittsburgh", "steelers", "heinz field", "acrisure"],
+    "Chargers": ["los angeles chargers", "l.a. chargers", "chargers", "sofi"],
+    "Eagles": ["philadelphia", "eagles", "lincoln financial", "linc"],
+    "Bears": ["chicago", "bears", "soldier field"],
+    "Bills": ["buffalo", "bills", "highmark"],
+    "49ers": ["san francisco", "49ers", "niners", "levi's stadium"],
+    "Texans": ["houston", "texans", "nrg stadium"],
+    "Patriots": ["new england", "patriots", "foxborough", "gillette"],
+    "Seahawks": ["seattle", "seahawks", "lumen field"],
+    "Falcons": ["atlanta", "falcons", "mercedes-benz"],
+    "Colts": ["indianapolis", "colts", "lucas oil"],
+    "Packers": ["green bay", "packers", "lambeau"],
+    "Jaguars": ["jacksonville", "jaguars", "everbank"],
+    "Broncos": ["denver", "broncos", "empower field"],
+}
+
+
+# ─────────────────────────────────────────────
 # 2026 NFL DRAFT ORDER (Round 1)
 # ─────────────────────────────────────────────
 DRAFT_ORDER = {
@@ -686,8 +726,21 @@ def score_article(article, prospect, team):
     parts = [p for p in prospect.lower().split() if len(p) > 3]
     if not any(p in text for p in parts):
         return 0, [], []
-    if team.lower() not in text and team != "GENERAL":
-        return 0, [], []
+
+    # Check if this team (or any of its aliases) appears in the text
+    if team != "GENERAL":
+        team_terms = [team.lower()] + TEAM_ALIASES.get(team, [])
+        if not any(term in text for term in team_terms):
+            return 0, [], []
+
+    # For GENERAL scoring: only score if NO specific team is mentioned
+    # This prevents articles about specific teams from being double-counted as GENERAL
+    if team == "GENERAL":
+        for other_team, aliases in TEAM_ALIASES.items():
+            all_terms = [other_team.lower()] + aliases
+            if any(term in text for term in all_terms):
+                return 0, [], []  # Skip GENERAL if a team is identifiable
+
     score = 0
     matched_signals = []
     matched_level = []
@@ -697,28 +750,33 @@ def score_article(article, prospect, team):
                 score += WEIGHTS[level]
                 matched_signals.append(kw)
                 matched_level.append(level)
+
     if score > 0:
         p_idx = next((text.find(p) for p in parts if text.find(p) != -1), -1)
-        t_idx = text.find(team.lower())
+        if team != "GENERAL":
+            team_terms = [team.lower()] + TEAM_ALIASES.get(team, [])
+            t_idx = min((text.find(term) for term in team_terms if text.find(term) != -1), default=-1)
+        else:
+            t_idx = -1
+
         if p_idx != -1 and t_idx != -1:
             dist = abs(p_idx - t_idx)
             if dist < 100:
                 score += 2
             elif dist < 300:
                 score += 1
+
         # Boost score if team's pick slot is close to prospect's consensus rank
         prospect_rank = TOP_PROSPECTS.get(prospect, {}).get("consensus_rank", 999)
         team_pick = DRAFT_ORDER.get(team, 999)
         pick_diff = abs(prospect_rank - team_pick)
         if pick_diff <= 3:
-            score += 3  # Very likely range
+            score += 3
         elif pick_diff <= 8:
-            score += 1  # Plausible range
+            score += 1
+
     return score, matched_signals[:3], matched_level[:3]
 
-# ─────────────────────────────────────────────
-#  AGGREGATE → JSON
-# ─────────────────────────────────────────────
 def aggregate(refresh=False):
     if refresh:
         for f in CACHE_DIR.glob("*"):
