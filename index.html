@@ -353,6 +353,16 @@ Keep it tight and actionable. No fluff.`;
   } catch(e) {
     output.innerHTML = buildStaticAnalysis(currentData);
   }
+
+  // Re-render mock draft after site render (prevents site clearing our board)
+  if (window._mockData && window._mockData.length) { setTimeout(function(){ renderMockDraft(window._mockData); }, 0); }
+  // Fix hottest prospect full name
+  if (window._sd && window._sd.prospects && window._sd.prospects.length) {
+    var _hEl = document.getElementById('s-hot');
+    if (_hEl) { var _n = window._sd.prospects[0].name; _hEl.textContent = _n; _hEl.style.fontSize = _n.length > 12 ? '13px' : '16px'; }
+    var _subEl = document.getElementById('s-hot-sub');
+    if (_subEl) _subEl.textContent = window._sd.prospects[0].total_signal_score + ' pts signal';
+  }
 }
 
 function buildStaticAnalysis(data) {
