@@ -172,7 +172,38 @@
       <span style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">ScottBot Mock Draft — Updated Daily</span>
       <div style="font-size:11px;color:var(--dim);margin-top:3px;">Signal-driven Round 1 projection. Confidence reflects beat reporter + Reddit intel strength.</div>
     </div>
-    <div id="mock-draft-board"></div>
+    <details style="margin-bottom:14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 16px;cursor:pointer;">
+  <summary style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;list-style:none;user-select:none;">&#9432;&nbsp;&nbsp;How ScottBot builds this mock draft &mdash; click to expand</summary>
+  <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+    <div style="background:var(--surface);border-radius:6px;padding:12px;">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Signal Points</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Beat reporters, Reddit, and 19 news outlets are scanned 3x daily. When a team is linked to a prospect, the article scores points:<br><br>
+        <span style="color:var(--green);">&#9679; HIGH (3pts)</span> &mdash; visited, trade up, targeting, priority<br>
+        <span style="color:var(--amber);">&#9679; MEDIUM (2pts)</span> &mdash; fit, interest, mock, linked to<br>
+        <span style="color:var(--muted);">&#9679; LOW (1pt)</span> &mdash; scouted, option, could be<br><br>
+        Bonus pts if the team + player appear close together in the article.
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:6px;padding:12px;">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Mock Draft Logic</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Each pick uses a composite score blending two signals:<br><br>
+        <span style="color:var(--text);">Consensus rank match</span> &mdash; exact match to pick # = +50 bonus, 1 off = +20, within 3 = +5<br><br>
+        <span style="color:var(--text);">Beat reporter signal</span> &mdash; raw signal points linking that player to that team<br><br>
+        The highest composite score wins the pick. Obvious locks (Mendoza #1) stay locked. Signal can move players up or down.
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:6px;padding:12px;">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Confidence Levels</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+        <span style="color:var(--green);font-weight:600;">HIGH</span> &mdash; consensus lock (exact rank match) or 15+ signal pts<br><br>
+        <span style="color:var(--amber);font-weight:600;">MEDIUM</span> &mdash; 8&ndash;14 signal pts, or within 3 picks of consensus rank<br><br>
+        <span style="color:var(--muted);font-weight:600;">LOW</span> &mdash; best available fallback, limited intel<br><br>
+        Sources: 19 national outlets &plus; 32 team feeds &plus; Google News &plus; Reddit &mdash; updated at 7am, 1pm &amp; 7pm ET.
+      </div>
+    </div>
+  </div>
+</details>
+<div id="mock-draft-board"></div>
   </div>
 <div class="stats-bar">
       <div class="stat-card"><div class="stat-label">Prospects tracked</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">verified 2026 class</div></div>
