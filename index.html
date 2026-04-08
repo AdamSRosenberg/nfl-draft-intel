@@ -281,11 +281,11 @@ async function runAI(data) {
   const top = data.prospects.filter(p => p.total_signal_score > 0).slice(0, 8);
   const summary = top.map(p => {
     const teams = p.teams.slice(0,3).map(t => `${t.team}(${t.score}pts,signals:${t.top_signals.slice(0,2).join(',')})`).join('|');
-    return `${p.name}[${p.pos},rank#${p.consensus_rank}] signal:${p.total_signal_score} teams:${teams}`;
+    return `${(p.prospect||p.name||"")}[${p.pos},rank#${p.consensus_rank}] signal:${p.total_signal_score} teams:${teams}`;
   }).join('\n');
 
   const headlines = data.prospects.flatMap(p =>
-    p.teams.flatMap(t => t.top_articles.map(a => `${p.name}→${t.team}:"${a.title}"(${a.source})`))
+    p.teams.flatMap(t => t.top_articles.map(a => `${(p.prospect||p.name||"")}→${t.team}:"${a.title}"(${a.source})`))
   ).slice(0, 15).join('\n');
 
   const prompt = `You are an NFL Draft intelligence analyst. 2026 NFL Draft is April 23-25 in Pittsburgh. Data scraped from beat reporters today (NOT ESPN).
@@ -335,12 +335,12 @@ function buildStaticAnalysis(data) {
 
   const locks = top.slice(0, 2).map(p => {
     const t = p.teams[0];
-    return `<strong>${p.name} → ${t.team}</strong>: ${t.top_signals.slice(0,2).join(', ')} (score: ${t.score})`;
+    return `<strong>${(p.prospect||p.name||"")} → ${t.team}</strong>: ${t.top_signals.slice(0,2).join(', ')} (score: ${t.score})`;
   }).join('<br>');
 
   const risers = top.filter(p => p.consensus_rank > 5).slice(0, 2).map(p => {
     const t = p.teams[0];
-    return `<strong>${p.name}</strong> (consensus #${p.consensus_rank}) → ${t.team} generating ${p.total_signal_score}pts signal`;
+    return `<strong>${(p.prospect||p.name||"")}</strong> (consensus #${p.consensus_rank}) → ${t.team} generating ${p.total_signal_score}pts signal`;
   }).join('<br>');
 
   return `<strong>STRONG SIGNAL</strong><br>${locks}<br><br><strong>RISING SIGNAL</strong><br>${risers}<br><br><em>Paste this JSON into Claude.ai chat for deeper AI analysis and betting recommendations.</em>`;
@@ -358,7 +358,7 @@ function renderMovers(data) {
       ${risers.map(p => {
         const t = p.teams[0];
         return `<div class="mover-item">
-          <div><div class="mover-name">${p.name} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
+          <div><div class="mover-name">${(p.prospect||p.name||"")} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
           <div class="mover-reason">${t?.team||'—'}: ${t?.top_signals?.[0]||'signal detected'}</div></div>
           <div class="mover-delta up">+${p.total_signal_score}pts</div>
         </div>`;
@@ -367,7 +367,7 @@ function renderMovers(data) {
     <div class="mover-panel">
       <div class="mover-head falling">↓ Quiet — no signal</div>
       ${quiet.map(p => `<div class="mover-item">
-        <div><div class="mover-name">${p.name} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
+        <div><div class="mover-name">${(p.prospect||p.name||"")} <span style="font-size:10px;color:var(--muted);font-family:var(--mono)">${p.pos}</span></div>
         <div class="mover-reason">No beat reporter activity</div></div>
         <div class="mover-delta down">silent</div>
       </div>`).join('')}
@@ -376,7 +376,7 @@ function renderMovers(data) {
 
 function renderTicker(data) {
   const articles = data.prospects.flatMap(p =>
-    p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, prospect: p.name, team: t.team})))
+    p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, prospect: (p.prospect||p.name||""), team: t.team})))
   ).filter(a => a.title).sort((a,b) => new Date(b.published||0) - new Date(a.published||0));
 
   document.getElementById('ticker-list').innerHTML = articles.slice(0, 12).map(a => {
@@ -408,7 +408,7 @@ function renderBoard(data) {
     const topTeam = p.teams?.[0];
     const pct = Math.round(p.total_signal_score / maxScore * 100);
     const color = barColor(p.total_signal_score);
-    const isExp = expandedPlayer === p.name;
+    const isExp = expandedPlayer === (p.prospect||p.name||"");
     const trendDiff = p.consensus_rank - (i + 1);
     const trendStr = trendDiff > 0 ? `+${trendDiff}` : trendDiff < 0 ? `${trendDiff}` : '—';
     const trendClass = trendDiff > 0 ? 'up' : trendDiff < 0 ? 'down' : 'flat';
@@ -446,10 +446,10 @@ function renderBoard(data) {
       </div></div>`;
     }
 
-    return `<div class="player-row${isExp?' expanded':''}" onclick="toggle('${p.name}')">
+    return `<div class="player-row${isExp?' expanded':''}" onclick="toggle('${(p.prospect||p.name||"")}')">
       <div class="rank">${p.consensus_rank}</div>
       <div>
-        <div class="player-name">${p.name}<span class="pos-badge">${p.pos}</span></div>
+        <div class="player-name">${(p.prospect||p.name||"")}<span class="pos-badge">${p.pos}</span></div>
         <div class="player-school">${p.college}</div>
       </div>
       <div class="trend-val ${trendClass}">${trendStr}</div>
@@ -559,7 +559,7 @@ function doSearch(q){
   if(_sd){_run(q,out);}else{fetch('draft_intel.json').then(function(r){return r.json();}).then(function(data){_sd=data;_run(q,out);});}
 }
 function _run(q,out){
-  var mm=(_sd.prospects||[]).filter(function(p){return p.name.toLowerCase().indexOf(q)>-1;});
+  var mm=(_sd.prospects||[]).filter(function(p){return (p.prospect||p.name||"").toLowerCase().indexOf(q)>-1;});
   if(!mm.length){out.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">No prospects found for "'+q+'"</p>';return;}
   out.innerHTML=mm.map(function(p){
     var sc=p.total_signal_score,col=sc>=20?'var(--green)':sc>=10?'var(--amber)':'var(--red)';
@@ -568,7 +568,7 @@ function _run(q,out){
       var arts=(t.top_articles||[]).slice(0,3).map(function(a){return'<div style="padding:5px 0;border-bottom:1px solid var(--border)"><a href="'+a.link+'" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px">'+a.title+'</a><br><span style="color:var(--muted);font-size:11px">'+a.source+'</span></div>';}).join('');
       return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><b style="color:var(--text);font-size:13px">'+t.team+'</b><span style="font-size:20px;font-weight:800;color:var(--green)">+'+t.score+' pts</span></div><div style="margin-bottom:6px">'+sigs+'</div>'+arts+'</div>';
     }).join('');
-    return'<div class="ai-panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><div style="font-size:20px;font-weight:700;color:var(--text)">'+p.name+'</div><div style="color:var(--muted);font-size:13px;margin-top:2px">'+p.pos+' · '+p.college+'</div>'+(p.consensus_rank?'<div style="color:var(--muted);font-size:12px;margin-top:3px">Rank <b style="color:var(--text)">#'+p.consensus_rank+'</b> · Top: <b style="color:var(--accent)">'+(p.top_landing_spot||'—')+'</b></div>':'')+'</div><div style="text-align:right"><div style="font-size:34px;font-weight:800;color:'+col+'">'+sc+'</div><div style="color:var(--muted);font-size:11px">signal pts</div></div></div>'+teams+'</div>';
+    return'<div class="ai-panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><div style="font-size:20px;font-weight:700;color:var(--text)">'+(p.prospect||p.name||"")+'</div><div style="color:var(--muted);font-size:13px;margin-top:2px">'+p.pos+' · '+p.college+'</div>'+(p.consensus_rank?'<div style="color:var(--muted);font-size:12px;margin-top:3px">Rank <b style="color:var(--text)">#'+p.consensus_rank+'</b> · Top: <b style="color:var(--accent)">'+(p.top_landing_spot||'—')+'</b></div>':'')+'</div><div style="text-align:right"><div style="font-size:34px;font-weight:800;color:'+col+'">'+sc+'</div><div style="color:var(--muted);font-size:11px">signal pts</div></div></div>'+teams+'</div>';
   }).join('');
 }
 </script>
@@ -595,7 +595,7 @@ function runMockDraft(prospects) {
   DRAFT_ORDER.forEach(function(slot) {
     // Find highest-signal available player for this team
     var teamPicks = available.filter(function(p) {
-      if(taken[p.name]) return false;
+      if(taken[(p.prospect||p.name||"")]) return false;
       var teamData = (p.teams||[]).find(function(t){ return t.team === slot.team; });
       return teamData && teamData.score > 0;
     }).sort(function(a,b){
@@ -611,7 +611,7 @@ function runMockDraft(prospects) {
       hasSignal = true;
     } else {
       // Best available by consensus rank
-      picked = available.find(function(p){ return !taken[p.name]; });
+      picked = available.find(function(p){ return !taken[(p.prospect||p.name||"")]; });
     }
 
     if(picked) {
@@ -622,21 +622,6 @@ function runMockDraft(prospects) {
   return results;
 }
 
-function renderMockDraft(prospects) {
-  var picks = runMockDraft(prospects);
-  var html = picks.map(function(p) {
-    var sigClass = p.signal >= 20 ? 'high' : p.signal >= 10 ? 'med' : 'low';
-    var sigLabel = p.hasSignal ? '+'+p.signal+'pts' : 'BPA';
-    return '<div class="pick-row'+(p.hasSignal?' signal-pick':'')+'">'+
-      '<span class="pick-num">#'+p.pick+'</span>'+
-      '<span class="pick-team">'+p.team+'</span>'+
-      '<span class="pick-player">'+p.player+'<span class="pick-pos">'+p.pos+'</span></span>'+
-      '<span class="pick-signal '+sigClass+'">'+sigLabel+'</span>'+
-    '</div>';
-  }).join('');
-  var el = document.getElementById('mock-draft-board');
-  if(el) el.innerHTML = html;
-}
 
 function initMockDraft() {
   if(_sd && _sd.prospects) { renderMockDraft(_sd.prospects); return; }
@@ -734,7 +719,7 @@ function _runTeamSearch(q, out) {
       var topArt = t.top_articles && t.top_articles[0];
       return '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">'
         + '<div style="flex:1;">'
-        + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + p.name + '</div>'
+        + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + (p.prospect||p.name||"") + '</div>'
         + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">' + p.pos + ' &middot; ' + p.college + (p.consensus_rank ? ' &middot; Consensus #' + p.consensus_rank : '') + '</div>'
         + (sigs ? '<div style="margin-top:5px;">' + sigs + '</div>' : '')
         + (topArt ? '<div style="margin-top:5px;"><a href="' + topArt.link + '" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">' + topArt.title + '</a><span style="color:var(--dim);font-size:10px;margin-left:6px;">' + topArt.source + '</span></div>' : '')
