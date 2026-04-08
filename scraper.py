@@ -2,6 +2,112 @@
 # GOOGLE NEWS — per prospect (no API key needed)
 # ─────────────────────────────────────────────
 
+# ─────────────────────────────────────────────
+# PREDICTION MARKETS — Kalshi + Polymarket
+# High-probability contracts (>60%) count as STRONG signal
+# ─────────────────────────────────────────────
+
+KALSHI_API = "https://api.elections.kalshi.com/trade-api/v2/markets?limit=100&series_ticker=NFLDRAFT"
+POLYMARKET_API = "https://gamma-api.polymarket.com/markets?tag=nfl-draft&limit=100&active=true"
+
+def fetch_kalshi_signals(results, prospects):
+    """Pull Kalshi NFL Draft markets and score high-probability contracts as signal."""
+    try:
+        r = requests.get(KALSHI_API, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        if r.status_code != 200:
+            print(f"  Kalshi: HTTP {r.status_code}")
+            return
+        markets = r.json().get("markets", [])
+        print(f"  Kalshi: {len(markets)} draft markets found")
+        _score_prediction_markets(markets, results, prospects, source="Kalshi",
+            title_key="title", yes_price_key="yes_ask", ticker_key="ticker_name")
+    except Exception as e:
+        print(f"  Kalshi error: {e}")
+
+def fetch_polymarket_signals(results, prospects):
+    """Pull Polymarket NFL Draft markets and score high-probability contracts as signal."""
+    try:
+        r = requests.get(POLYMARKET_API, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        if r.status_code != 200:
+            print(f"  Polymarket: HTTP {r.status_code}")
+            return
+        markets = r.json() if isinstance(r.json(), list) else r.json().get("data", [])
+        print(f"  Polymarket: {len(markets)} draft markets found")
+        _score_prediction_markets(markets, results, prospects, source="Polymarket",
+            title_key="question", yes_price_key="lastTradePrice", ticker_key="id")
+    except Exception as e:
+        print(f"  Polymarket error: {e}")
+
+def _score_prediction_markets(markets, results, prospects, source, title_key, yes_price_key, ticker_key):
+    """
+    For each market, try to match prospect + team.
+    If probability > 60%, add HIGH signal. If > 40%, add MEDIUM signal.
+    """
+    for market in markets:
+        title = str(market.get(title_key, "")).lower()
+        if not title:
+            continue
+
+        # Try to find a prospect mentioned
+        matched_prospect = None
+        for prospect in prospects:
+            parts = [p for p in prospect.lower().split() if len(p) > 3]
+            if any(p in title for p in parts):
+                matched_prospect = prospect
+                break
+
+        if not matched_prospect:
+            continue
+
+        # Try to find a team mentioned
+        matched_team = "GENERAL"
+        for team, aliases in TEAM_ALIASES.items():
+            all_terms = [team.lower()] + aliases
+            if any(term in title for term in all_terms):
+                matched_team = team
+                break
+
+        # Get probability
+        try:
+            price = float(market.get(yes_price_key, 0) or 0)
+            # Kalshi prices are 0-1, Polymarket sometimes 0-100
+            if price > 1:
+                price = price / 100.0
+        except:
+            continue
+
+        if price < 0.2:
+            continue  # Too unlikely, skip
+
+        # Score based on probability
+        if price >= 0.60:
+            signal_pts = 8   # HIGH — market strongly believes this
+            level = "HIGH"
+            signal_kw = f"{source} {int(price*100)}% probability"
+        elif price >= 0.40:
+            signal_pts = 4   # MEDIUM
+            level = "MEDIUM"
+            signal_kw = f"{source} {int(price*100)}% probability"
+        else:
+            signal_pts = 1   # LOW
+            level = "LOW"
+            signal_kw = f"{source} {int(price*100)}% probability"
+
+        market_title = str(market.get(title_key, ""))
+        ticker = str(market.get(ticker_key, ""))
+        link = f"https://kalshi.com/markets/{ticker}" if source == "Kalshi" else f"https://polymarket.com/event/{ticker}"
+
+        results[matched_prospect][matched_team]["score"] += signal_pts
+        results[matched_prospect][matched_team]["signals"].append(signal_kw)
+        results[matched_prospect][matched_team]["signal_levels"].append(level)
+        results[matched_prospect][matched_team]["articles"].append({
+            "title": f"[{source} {int(price*100)}%] {market_title}",
+            "link": link,
+            "source": source,
+            "published": datetime.now().isoformat(),
+        })
+
+
 GOOGLE_NEWS_BASE = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q="
 
 def fetch_google_news(prospect_name, days_back=7):
@@ -820,6 +926,13 @@ def aggregate(refresh=False):
     print("  Scraping extra national sources...")
     fetch_extra_sources(results, list(TOP_PROSPECTS.keys()))
     print("  Extra sources complete")
+
+    # Prediction markets
+    print("  Fetching Kalshi prediction markets...")
+    fetch_kalshi_signals(results, list(TOP_PROSPECTS.keys()))
+    print("  Fetching Polymarket prediction markets...")
+    fetch_polymarket_signals(results, list(TOP_PROSPECTS.keys()))
+    print("  Prediction markets complete")
 
     # Build structured output
     output = {
