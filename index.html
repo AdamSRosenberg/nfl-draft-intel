@@ -668,15 +668,15 @@ function doTeamSearch(q) {
   q = (q || '').trim().toLowerCase();
   var out = document.getElementById('teamSearchOut');
   if (!q) { out.innerHTML = ''; return; }
-  if (_sd) { _runTeamSearch(q, out); }
+  if (window._sd) { _runTeamSearch(q, out); }
   else {
-    fetch('draft_intel.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(data){ _sd = data; _runTeamSearch(q, out); });
+    fetch('draft_intel.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(data){ window._sd = data; _runTeamSearch(q, out); });
   }
 }
 
 function _runTeamSearch(q, out) {
-  var prospects = (_sd.prospects || []);
-  var mockDraft = (_sd.mock_draft || []);
+  var prospects = (window._sd.prospects || []);
+  var mockDraft = (window._sd.mock_draft || []);
 
   // Find matching teams
   var teams = {};
