@@ -497,57 +497,57 @@ function toggleMockDraft() {
 function renderMockDraft(picks) {
   var el = document.getElementById('mock-draft-board');
   if (!el || !picks || !picks.length) return;
-  
-  // Confidence scoring: HIGH only for picks with strong signal (score>=20) OR exact consensus lock
-  // MEDIUM for moderate signal or near-consensus. LOW for pure fallback.
-  // Spread it realistically - roughly 25% HIGH, 40% MEDIUM, 35% LOW
   var html = '';
   for (var i = 0; i < picks.length; i++) {
     var p = picks[i];
+    var name = p.prospect || p.name || '?';
     var sc = p.signal_score || 0;
-    var rankDiff = Math.abs((p.consensus_rank || 99) - p.pick);
-    
-    // Realistic confidence - not everything is HIGH
-    var conf, confColor, confNote;
-    if (sc >= 20 && rankDiff <= 2) { conf='HIGH'; confColor='var(--green)'; confNote='Strong signal + consensus'; }
-    else if (sc >= 15 || (sc >= 8 && rankDiff === 0)) { conf='HIGH'; confColor='var(--green)'; confNote = sc>=15 ? 'Strong beat reporter signal' : 'Consensus lock'; }
-    else if (rankDiff === 0 && sc >= 3) { conf='MEDIUM'; confColor='var(--amber)'; confNote='Consensus fit, moderate signal'; }
-    else if (sc >= 8) { conf='MEDIUM'; confColor='var(--amber)'; confNote='Signal-driven'; }
-    else if (rankDiff <= 3) { conf='MEDIUM'; confColor='var(--amber)'; confNote='Consensus range'; }
-    else { conf='LOW'; confColor='var(--muted)'; confNote='Best available — limited intel'; }
-    
-    // Why section
-    var why = '';
-    if (conf === 'HIGH' && sc >= 15 && p.top_article_title) {
-      why = '<div style="padding:8px 10px;background:rgba(0,0,0,.2);border-radius:6px;border-left:2px solid var(--green);margin-bottom:8px;">'
-        + '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:3px;">Top signal &mdash; '+sc+' pts</div>'
-        + '<a href="'+(p.top_article_link||'#')+'" target="_blank" style="color:var(--accent);font-size:12px;text-decoration:none;line-height:1.4;">'+(p.top_article_title||'')+'</a>'
-        + '<div style="color:var(--dim);font-size:11px;margin-top:2px;">'+(p.top_article_source||'')+'</div></div>';
-    } else if (rankDiff <= 1) {
-      why = '<div style="font-size:12px;color:var(--muted);">Consensus rank <strong style="color:var(--text);">#'+p.consensus_rank+'</strong> aligns with pick #'+p.pick+'. Locked by mock draft consensus.</div>';
-    } else if (sc > 0 && p.top_article_title) {
-      why = '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">'+(sc)+' signal pts linked to '+p.team+'.</div>'
-        + '<a href="'+(p.top_article_link||'#')+'" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">'+(p.top_article_title||'')+'</a>';
+    var rankDiff = Math.abs((p.consensus_rank || 99) - (p.pick || i+1));
+    var conf, confColor;
+    if (sc >= 20 && rankDiff <= 2) { conf='HIGH'; confColor='var(--green)'; }
+    else if (sc >= 15) { conf='HIGH'; confColor='var(--green)'; }
+    else if (rankDiff === 0 && sc >= 5) { conf='HIGH'; confColor='var(--green)'; }
+    else if (sc >= 8 || rankDiff === 0) { conf='MEDIUM'; confColor='var(--amber)'; }
+    else if (rankDiff <= 4) { conf='MEDIUM'; confColor='var(--amber)'; }
+    else { conf='LOW'; confColor='var(--muted)'; }
+
+    var hasArticle = p.top_article_title && p.top_article_title.length > 0;
+    var hasLink = p.top_article_link && p.top_article_link.length > 0;
+    var reason = '';
+
+    if (sc >= 8 && hasArticle) {
+      reason += '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(0,0,0,.25);border-radius:6px;border-left:2px solid '+confColor+';">'
+        + '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:4px;">'+sc+' signal pts from beat reporters</div>'
+        + (hasLink ? '<a href="'+p.top_article_link+'" target="_blank" style="color:var(--accent);font-size:12px;text-decoration:none;line-height:1.5;">' : '<span style="color:var(--text);font-size:12px;">')
+        + p.top_article_title
+        + (hasLink ? '</a>' : '</span>')
+        + (p.top_article_source ? '<div style="color:var(--dim);font-size:11px;margin-top:2px;">'+p.top_article_source+'</div>' : '')
+        + '</div>';
+      if (rankDiff <= 3) reason += '<div style="font-size:12px;color:var(--muted);">Consensus rank <strong style="color:var(--text);">#'+p.consensus_rank+'</strong> also aligns with this pick slot.</div>';
+    } else if (sc > 0 && hasArticle) {
+      reason += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Light signal ('+sc+' pts) connecting '+name+' to '+p.team+':</div>'
+        + (hasLink ? '<a href="'+p.top_article_link+'" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">'+p.top_article_title+'</a>' : '<span style="font-size:11px;color:var(--muted);">'+p.top_article_title+'</span>');
+      if (rankDiff <= 3) reason += '<div style="font-size:12px;color:var(--muted);margin-top:6px;">Consensus rank <strong style="color:var(--text);">#'+p.consensus_rank+'</strong> also fits this slot.</div>';
+    } else if (rankDiff === 0) {
+      reason = '<div style="font-size:12px;color:var(--muted);">Consensus rank <strong style="color:var(--text);">#'+p.consensus_rank+'</strong> is an exact match for pick #'+p.pick+'. Consistent across Walter Football, PFF, CBS Sports &amp; Draft Network. No significant chatter connecting '+name+' elsewhere.</div>';
+    } else if (rankDiff <= 3) {
+      reason = '<div style="font-size:12px;color:var(--muted);">No direct signal to '+p.team+'. Consensus rank <strong style="color:var(--text);">#'+p.consensus_rank+'</strong> is close to pick #'+p.pick+' — best available at this slot.</div>';
     } else {
-      why = '<div style="font-size:12px;color:var(--muted);">No direct beat reporter signal yet for '+p.team+'. Best available at pick #'+p.pick+' by consensus rank.</div>';
+      reason = '<div style="font-size:12px;color:var(--muted);">No beat reporter intel yet. Best prospect available at pick #'+p.pick+' by consensus rank <strong style="color:var(--text);">#'+(p.consensus_rank||'?')+'</strong>. Check back as the draft approaches.</div>';
     }
-    
-    var sigs = (p.top_signals||[]).map(function(s){
-      return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;font-size:10px;margin-right:3px;">'+s+'</span>';
-    }).join('');
+
+    var sigs = (p.top_signals||[]).map(function(s){ return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;font-size:10px;margin-right:3px;">'+s+'</span>'; }).join('');
 
     html += '<details style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;overflow:hidden;">'
       + '<summary style="display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;padding:9px 14px;cursor:pointer;list-style:none;">'
       + '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--dim);font-family:var(--mono);">'+(p.pick||i+1)+'</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);">'+p.team+'</div></div>'
-      + '<div><div style="font-size:14px;font-weight:600;color:var(--text);">'+p.prospect+'</div>'
+      + '<div><div style="font-size:14px;font-weight:600;color:var(--text);">'+name+'</div>'
       + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+p.pos+' &middot; '+p.college+(p.consensus_rank?' &middot; Consensus #'+p.consensus_rank:'')+'</div></div>'
       + '<div style="text-align:right;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+confColor+'22;color:'+confColor+';">'+conf+'</span>'
-      + '<div style="font-size:9px;color:var(--dim);margin-top:2px;">'+confNote+'</div></div>'
+      + '<div style="font-size:9px;color:var(--dim);margin-top:2px;">'+(sc>0?sc+'pts signal':'consensus')+'</div></div>'
       + '</summary>'
-      + '<div style="padding:10px 14px;border-top:1px solid var(--border);font-size:12px;">'
-      + why
-      + (sigs ? '<div style="margin-top:6px;">'+sigs+'</div>' : '')
-      + '</div></details>';
+      + '<div style="padding:10px 14px;border-top:1px solid var(--border);">'+reason+(sigs?'<div style="margin-top:8px;">'+sigs+'</div>':'')+'</div>'
+      + '</details>';
   }
   el.innerHTML = html;
 }
