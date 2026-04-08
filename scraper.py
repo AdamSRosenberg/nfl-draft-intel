@@ -891,6 +891,9 @@ def generate_mock_draft(prospects):
             "consensus_rank": best.get("consensus_rank"),
             "signal_score": signal,
             "top_signals": (td or {}).get("top_signals", [])[:2],
+            "top_article_title": (td or {}).get("top_articles", [{}])[0].get("title", "") if (td or {}).get("top_articles") else "",
+            "top_article_link": (td or {}).get("top_articles", [{}])[0].get("link", "") if (td or {}).get("top_articles") else "",
+            "top_article_source": (td or {}).get("top_articles", [{}])[0].get("source", "") if (td or {}).get("top_articles") else "",
             "confidence": confidence,
             "note": note,
         })
