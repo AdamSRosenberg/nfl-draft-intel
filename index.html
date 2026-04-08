@@ -139,6 +139,9 @@
   .mock-pick-conf.LOW{background:var(--muted)22;color:var(--muted);}
   .mock-signals{font-size:10px;color:var(--muted);margin-top:3px;}
 
+
+  .general-tag{display:inline-block;background:var(--muted)22;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:10px;font-family:var(--mono);cursor:help;position:relative;}
+  .general-tag:hover::after{content:"National buzz — not yet linked to a specific team. Sourced from PFF, Walter Football, CBS Sports, Draft Network, Reddit & other national outlets.";position:absolute;bottom:calc(100% + 6px);left:0;width:220px;background:#1a1a2a;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--muted);line-height:1.5;z-index:99;pointer-events:none;font-family:var(--sans);text-transform:none;letter-spacing:0;}
 </style>
 </head>
 <body>
@@ -198,7 +201,7 @@
         <span style="color:var(--green);font-weight:600;">HIGH</span> &mdash; consensus lock (exact rank match) or 15+ signal pts<br><br>
         <span style="color:var(--amber);font-weight:600;">MEDIUM</span> &mdash; 8&ndash;14 signal pts, or within 3 picks of consensus rank<br><br>
         <span style="color:var(--muted);font-weight:600;">LOW</span> &mdash; best available fallback, limited intel<br><br>
-        Sources: 19 national outlets &plus; 32 team feeds &plus; Google News &plus; Reddit &mdash; updated at 7am, 1pm &amp; 7pm ET.
+        Sources: 19 national outlets &plus; 32 team feeds &plus; Google News &plus; Reddit &mdash; updated at 7am, 1pm &amp; 7pm ET.<br><br><span style="color:var(--accent);">&#9432; &ldquo;National Intel&rdquo;</span> means a prospect has buzz in national media but no specific team has been linked yet. It scores signal points but doesn't push a team pick.
       </div>
     </div>
   </div>
