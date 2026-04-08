@@ -142,6 +142,12 @@
 
   .general-tag{display:inline-block;background:var(--muted)22;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:10px;font-family:var(--mono);cursor:help;position:relative;}
   .general-tag:hover::after{content:"National buzz — not yet linked to a specific team. Sourced from PFF, Walter Football, CBS Sports, Draft Network, Reddit & other national outlets.";position:absolute;bottom:calc(100% + 6px);left:0;width:220px;background:#1a1a2a;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--muted);line-height:1.5;z-index:99;pointer-events:none;font-family:var(--sans);text-transform:none;letter-spacing:0;}
+
+  #teamSearch{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-size:14px;font-family:var(--sans);outline:none;box-sizing:border-box;}
+  #teamSearch:focus{border-color:var(--green);}
+  .team-result-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .team-pick-badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;font-family:var(--mono);color:var(--muted);}
+
 </style>
 </head>
 <body>
@@ -208,7 +214,13 @@
 </details>
 <div id="mock-draft-board"></div>
   </div>
-<div class="stats-bar">
+<div style="margin-bottom:24px;">
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <input id="teamSearch" type="text" placeholder="&#127944;  Search a team (e.g. Chiefs, Patriots)..." oninput="doTeamSearch(this.value)"/>
+      <button class="s-clear" onclick="document.getElementById('teamSearch').value='';doTeamSearch('')">&#10005; Clear</button>
+    </div>
+    <div id="teamSearchOut"></div>
+  </div><div class="stats-bar">
       <div class="stat-card"><div class="stat-label">Prospects tracked</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">verified 2026 class</div></div>
       <div class="stat-card"><div class="stat-label">With signal</div><div class="stat-val" id="s-signal">—</div><div class="stat-sub">active intel found</div></div>
       <div class="stat-card"><div class="stat-label">Hottest prospect</div><div class="stat-val" id="s-hot" style="font-size:16px">—</div><div class="stat-sub" id="s-hot-sub">highest signal score</div></div>
@@ -651,6 +663,95 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(patchGeneralLabels, 2000);
   setTimeout(patchGeneralLabels, 5000);
 });
+
+function doTeamSearch(q) {
+  q = (q || '').trim().toLowerCase();
+  var out = document.getElementById('teamSearchOut');
+  if (!q) { out.innerHTML = ''; return; }
+  if (_sd) { _runTeamSearch(q, out); }
+  else {
+    fetch('draft_intel.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(data){ _sd = data; _runTeamSearch(q, out); });
+  }
+}
+
+function _runTeamSearch(q, out) {
+  var prospects = (_sd.prospects || []);
+  var mockDraft = (_sd.mock_draft || []);
+
+  // Find matching teams
+  var teams = {};
+  prospects.forEach(function(p) {
+    (p.teams || []).forEach(function(t) {
+      if (t.team.toLowerCase().indexOf(q) > -1 && t.team !== 'GENERAL') {
+        if (!teams[t.team]) teams[t.team] = [];
+        teams[t.team].push({ prospect: p, teamData: t });
+      }
+    });
+  });
+
+  var matchedTeams = Object.keys(teams);
+  if (!matchedTeams.length) {
+    out.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0">No teams found for "' + q + '"</p>';
+    return;
+  }
+
+  var DRAFT_ORDER = {Raiders:1,Jets:2,Cardinals:3,Titans:4,Giants:5,Browns:6,Commanders:7,Saints:8,Chiefs:9,Bengals:10,Dolphins:11,Cowboys:12,Rams:13,Ravens:14,Buccaneers:15,Lions:17,Vikings:18,Panthers:19,Steelers:21,Chargers:22,Eagles:23,Bears:25,Bills:26,"49ers":27,Texans:28,Patriots:31,Seahawks:32};
+  var NO_PICK = {Falcons:1,Colts:1,Packers:1,Jaguars:1,Broncos:1};
+
+  out.innerHTML = matchedTeams.map(function(teamName) {
+    var picks = teams[teamName].sort(function(a,b) { return b.teamData.score - a.teamData.score; });
+    var pickNum = DRAFT_ORDER[teamName];
+    var noPick = NO_PICK[teamName];
+    var mockPick = mockDraft.find(function(m) { return m.team === teamName; });
+
+    var pickBadge = noPick
+      ? '<span class="team-pick-badge" style="color:var(--red);">No Round 1 Pick</span>'
+      : pickNum ? '<span class="team-pick-badge">Pick #' + pickNum + '</span>' : '';
+
+    var mockBox = mockPick
+      ? '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">'
+        + '<div><div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">ScottBot Mock Pick</div>'
+        + '<div style="font-size:16px;font-weight:700;color:var(--text);">' + mockPick.prospect + '</div>'
+        + '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + mockPick.pos + ' &middot; ' + mockPick.college + (mockPick.consensus_rank ? ' &middot; Consensus #' + mockPick.consensus_rank : '') + '</div>'
+        + '<div style="font-size:11px;color:var(--dim);margin-top:2px;">' + mockPick.note + '</div></div>'
+        + '<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;background:' + (mockPick.confidence==='HIGH'?'var(--green)':'var(--amber)') + '22;color:' + (mockPick.confidence==='HIGH'?'var(--green)':'var(--amber)') + ';">' + mockPick.confidence + '</span>'
+        + '</div>'
+      : (noPick ? '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);">No Round 1 pick — traded away.</div>' : '');
+
+    var prospectsHtml = picks.slice(0, 8).map(function(item) {
+      var p = item.prospect, t = item.teamData;
+      var conf = t.score >= 15 ? 'HIGH' : t.score >= 5 ? 'MEDIUM' : 'LOW';
+      var col = conf === 'HIGH' ? 'var(--green)' : conf === 'MEDIUM' ? 'var(--amber)' : 'var(--muted)';
+      var sigs = (t.top_signals || []).map(function(s) {
+        return '<span style="background:' + col + '22;color:' + col + ';border-radius:3px;padding:1px 6px;font-size:10px;margin-right:3px;">' + s + '</span>';
+      }).join('');
+      var topArt = t.top_articles && t.top_articles[0];
+      return '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + p.name + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">' + p.pos + ' &middot; ' + p.college + (p.consensus_rank ? ' &middot; Consensus #' + p.consensus_rank : '') + '</div>'
+        + (sigs ? '<div style="margin-top:5px;">' + sigs + '</div>' : '')
+        + (topArt ? '<div style="margin-top:5px;"><a href="' + topArt.link + '" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">' + topArt.title + '</a><span style="color:var(--dim);font-size:10px;margin-left:6px;">' + topArt.source + '</span></div>' : '')
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0;">'
+        + '<div style="font-size:20px;font-weight:800;color:' + col + ';">' + t.score + '</div>'
+        + '<div style="font-size:9px;color:var(--muted);">signal pts</div>'
+        + '<div style="font-size:10px;font-weight:600;color:' + col + ';margin-top:2px;">' + conf + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    return '<div class="ai-panel" style="margin-bottom:12px;">'
+      + '<div class="team-result-header">'
+      + '<div style="font-size:20px;font-weight:700;color:var(--text);">' + teamName + '</div>'
+      + pickBadge
+      + '</div>'
+      + mockBox
+      + '<div style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Prospect Signal (' + picks.length + ' linked)</div>'
+      + prospectsHtml
+      + '</div>';
+  }).join('');
+}
 </script>
 </body>
 </html>
