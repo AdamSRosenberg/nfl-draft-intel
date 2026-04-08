@@ -24,7 +24,7 @@
   .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-family:var(--mono)}
-  .stat-val{font-size:22px;font-weight:600;color:#fff}
+  .stat-val{font-size:18px;font-weight:600;color:#fff};font-weight:600;color:#fff}
   .stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
   .ai-panel{background:var(--surface);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:12px;padding:20px 24px;margin-bottom:28px}
   .ai-label{font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.1em;font-weight:500;margin-bottom:14px}
@@ -506,44 +506,45 @@ loadData();
 function renderMockDraft(picks) {
   var el = document.getElementById('mock-draft-board');
   if (!el || !picks || !picks.length) return;
-  el.innerHTML = picks.map(function(p) {
+  var html = '';
+  for (var i = 0; i < picks.length; i++) {
+    var p = picks[i];
     var confColor = p.confidence==='HIGH' ? 'var(--green)' : p.confidence==='MEDIUM' ? 'var(--amber)' : 'var(--muted)';
-    var sigs = (p.top_signals||[]).map(function(s){
-      return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;margin-right:3px;font-size:10px;">'+s+'</span>';
-    }).join('');
-
-    // Build the "why" section
+    var sigs = '';
+    if (p.top_signals) {
+      for (var s = 0; s < p.top_signals.length; s++) {
+        sigs += '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;margin-right:3px;font-size:10px;">' + p.top_signals[s] + '</span>';
+      }
+    }
     var why = '';
     if (p.note === 'Consensus lock' || p.note === 'Consensus fit' || p.note === 'Consensus lock + signal') {
-      why = '<div style="font-size:12px;color:var(--muted);margin-bottom:'+(p.top_article_title?'8':'0')+'px;">'
-        + '<span style="color:var(--green);">&#9679; Consensus rank #'+p.consensus_rank+'</span> matches pick #'+p.pick
-        + ' &mdash; locked by mock draft consensus across Walter Football, PFF, Draft Network, CBS Sports & others.</div>';
+      why += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">'
+        + '<span style="color:var(--green);">&#9679; Consensus rank #' + p.consensus_rank + '</span> matches pick #' + p.pick
+        + ' &mdash; locked by consensus across Walter Football, PFF, CBS Sports, Draft Network &amp; others.</div>';
     }
     if (p.signal_score > 0 && p.top_article_title) {
       why += '<div style="padding:8px 10px;background:var(--surface);border-radius:6px;border-left:2px solid var(--accent);">'
-        + '<div style="font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);">Top signal &mdash; '+p.signal_score+' pts</div>'
-        + '<a href="'+p.top_article_link+'" target="_blank" style="color:var(--accent);font-size:12px;text-decoration:none;line-height:1.4;">'+p.top_article_title+'</a>'
-        + '<div style="color:var(--dim);font-size:11px;margin-top:2px;">'+p.top_article_source+'</div>'
-        + (sigs ? '<div style="margin-top:6px;">'+sigs+'</div>' : '')
+        + '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);">Top signal &mdash; ' + p.signal_score + ' pts</div>'
+        + '<a href="' + (p.top_article_link||'#') + '" target="_blank" style="color:var(--accent);font-size:12px;text-decoration:none;line-height:1.4;">' + p.top_article_title + '</a>'
+        + '<div style="color:var(--dim);font-size:11px;margin-top:2px;">' + (p.top_article_source||'') + '</div>'
+        + (sigs ? '<div style="margin-top:6px;">' + sigs + '</div>' : '')
         + '</div>';
-    } else if (p.signal_score === 0) {
+    } else if (!p.signal_score || p.signal_score === 0) {
       why += '<div style="font-size:12px;color:var(--muted);">No direct beat reporter signal yet &mdash; best available at this slot by consensus rank.</div>';
     }
-
-    return '<details style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;">'
+    html += '<details style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;overflow:hidden;">'
       + '<summary style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;list-style:none;">'
-      + '<div><div style="font-size:18px;font-weight:800;color:var(--muted);font-family:var(--mono);text-align:center;">'+p.pick+'</div>'
-      + '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);text-align:center;">'+p.team+'</div></div>'
-      + '<div><div style="font-size:15px;font-weight:600;color:var(--text);">'+p.prospect+'</div>'
-      + '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+p.pos+' &middot; '+p.college+(p.consensus_rank?' &middot; Consensus #'+p.consensus_rank:'')+'</div>'
-      + '<div style="font-size:10px;color:var(--dim);margin-top:2px;">'+p.note+' &mdash; click for detail</div></div>'
-      + '<span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:'+confColor+'22;color:'+confColor+';white-space:nowrap;">'+p.confidence+'</span>'
+      + '<div><div style="font-size:18px;font-weight:800;color:var(--muted);font-family:var(--mono);text-align:center;">' + p.pick + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);text-align:center;">' + p.team + '</div></div>'
+      + '<div><div style="font-size:15px;font-weight:600;color:var(--text);">' + p.prospect + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:2px;">' + p.pos + ' &middot; ' + p.college + (p.consensus_rank ? ' &middot; Consensus #' + p.consensus_rank : '') + '</div>'
+      + '<div style="font-size:10px;color:var(--dim);margin-top:2px;">' + p.note + ' &mdash; click for detail</div></div>'
+      + '<span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:' + confColor + '22;color:' + confColor + ';white-space:nowrap;">' + p.confidence + '</span>'
       + '</summary>'
-      + '<div style="padding:12px 14px;border-top:1px solid var(--border);">'
-      + why
-      + '</div>'
+      + '<div style="padding:12px 14px;border-top:1px solid var(--border);">' + why + '</div>'
       + '</details>';
-  }).join('');
+  }
+  el.innerHTML = html;
 }
 
 function doSearch(q){
