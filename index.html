@@ -601,9 +601,14 @@ function renderMockDraft(picks) {
       reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,193,7,.08);border-radius:6px;font-size:11px;color:var(--amber);">&#9733; New to the mock this run — signal just emerged</div>';
     }
 
-    // Team context
-    reason += '<div style="margin-bottom:8px;">The <strong style="color:var(--text);">' + p.team + '</strong> ' + need.note + '.';
-    if (posMatch) { reason += ' <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') is a direct positional fit.'; }
+    // Team context — only mention the need if the prospect actually fills it
+    reason += '<div style="margin-bottom:8px;">The <strong style="color:var(--text);">' + p.team + '</strong> ';
+    if (posMatch) {
+      reason += need.note + '. <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') is a direct positional fit.';
+    } else {
+      // Prospect doesn't match team need — lead with the prospect, not the need
+      reason += 'are targeting <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') here — signal and consensus rank override their primary positional need.';
+    }
     reason += '</div>';
 
     // Consensus
