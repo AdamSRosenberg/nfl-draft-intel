@@ -386,37 +386,33 @@ function renderMovers(data) {
 
 function renderTicker(data) {
   var MARKET_SOURCES = ['Kalshi', 'Polymarket'];
-  var el = document.getElementById('headlines-ticker');
-  if (!el) return;
+  var tickerEl = document.getElementById('headlines-ticker');
+  var listEl = document.getElementById('ticker-list') || tickerEl;
+  if (!listEl) return;
 
   var news = [], markets = [];
 
   (data.prospects || []).forEach(function(p) {
     (p.teams || []).forEach(function(t) {
       if (t.team === 'GENERAL') return;
-      (t.top_articles || []).slice(0, 3).forEach(function(art) {
+      (t.top_articles || []).slice(0, 2).forEach(function(art) {
         var src = art.source || '';
         var isMarket = MARKET_SOURCES.indexOf(src) > -1;
-        var item = {
-          prospect: p.name, pos: p.pos, team: t.team,
-          score: t.score, art: art, isMarket: isMarket
-        };
+        var item = { prospect: p.name, pos: p.pos, team: t.team, score: t.score, art: art, isMarket: isMarket };
         if (isMarket) markets.push(item);
         else news.push(item);
       });
     });
   });
 
-  // Sort by team signal score
   news.sort(function(a, b) { return b.score - a.score; });
   markets.sort(function(a, b) { return b.score - a.score; });
 
-  // Dedupe news by title
-  var seenTitles = {};
+  var seen = {};
   news = news.filter(function(n) {
     var k = n.art.title;
-    if (seenTitles[k]) return false;
-    seenTitles[k] = true;
+    if (seen[k]) return false;
+    seen[k] = true;
     return true;
   });
 
@@ -427,25 +423,22 @@ function renderTicker(data) {
     var art = item.art;
     var title = (art.title || '').replace(/\[Kalshi[^\]]*\]/g, '').replace(/\[Polymarket[^\]]*\]/g, '').trim();
     var dateStr = art.published ? art.published.substring(5, 10) : '';
-    var display = hidden ? ' style="display:none"' : '';
-    return '<div class="ticker-item"' + display + '>'
+    var style = hidden ? ' style="display:none"' : '';
+    return '<div class="ticker-item"' + style + '>'
       + '<div class="ticker-team">' + item.team + '</div>'
       + '<div style="flex:1"><div>'
       + '<span class="ticker-prospect">' + item.prospect + '</span> '
-      + (art.link ? '<a href="' + art.link + '" target="_blank" style="color:var(--accent);text-decoration:none;">' + title + '</a>' : '<span>' + title + '</span>')
+      + (art.link ? '<a href="' + art.link + '" target="_blank" style="color:var(--accent);text-decoration:none;">' + title + '</a>' : '<span style="color:var(--text)">' + title + '</span>')
       + '</div>'
       + '<div class="ticker-source">' + (art.source || '') + '</div></div>'
       + '<div class="ticker-date">' + dateStr + '</div>'
       + '</div>';
   }
 
-  // Keep existing tabs + head, rebuild items
-  var tabs = el.querySelector('.feed-tabs');
-  var head = el.querySelector('.ticker-head');
-  var itemsHtml = news.slice(0, 40).map(function(n) { return buildItem(n, false); }).join('')
-    + markets.slice(0, 40).map(function(m) { return buildItem(m, true); }).join('');
+  var html = news.slice(0, 40).map(function(n) { return buildItem(n, false); }).join('')
+    + markets.slice(0, 20).map(function(m) { return buildItem(m, true); }).join('');
 
-  el.innerHTML = (tabs ? tabs.outerHTML : '') + (head ? head.outerHTML : '') + itemsHtml;
+  listEl.innerHTML = html;
 }
 
 function barColor(score) {
