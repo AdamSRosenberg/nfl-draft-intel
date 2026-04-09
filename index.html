@@ -386,59 +386,42 @@ function renderMovers(data) {
 
 function renderTicker(data) {
   var MARKET_SOURCES = ['Kalshi', 'Polymarket'];
-  var tickerEl = document.getElementById('headlines-ticker');
-  var listEl = document.getElementById('ticker-list') || tickerEl;
+  var listEl = document.getElementById('ticker-list') || document.getElementById('headlines-ticker');
   if (!listEl) return;
-
   var news = [], markets = [];
-
   (data.prospects || []).forEach(function(p) {
     (p.teams || []).forEach(function(t) {
       if (t.team === 'GENERAL') return;
       (t.top_articles || []).slice(0, 2).forEach(function(art) {
-        var src = art.source || '';
-        var isMarket = MARKET_SOURCES.indexOf(src) > -1;
-        var item = { prospect: p.name, pos: p.pos, team: t.team, score: t.score, art: art, isMarket: isMarket };
-        if (isMarket) markets.push(item);
-        else news.push(item);
+        var isMarket = MARKET_SOURCES.indexOf(art.source || '') > -1;
+        var item = { prospect: p.name, team: t.team, score: t.score, art: art, isMarket: isMarket };
+        if (isMarket) markets.push(item); else news.push(item);
       });
     });
   });
-
   news.sort(function(a, b) { return b.score - a.score; });
   markets.sort(function(a, b) { return b.score - a.score; });
-
   var seen = {};
   news = news.filter(function(n) {
-    var k = n.art.title;
-    if (seen[k]) return false;
-    seen[k] = true;
+    if (seen[n.art.title]) return false;
+    seen[n.art.title] = true;
     return true;
   });
-
   window._tickerNews = news;
   window._tickerMarkets = markets;
-
   function buildItem(item, hidden) {
     var art = item.art;
     var title = (art.title || '').replace(/\[Kalshi[^\]]*\]/g, '').replace(/\[Polymarket[^\]]*\]/g, '').trim();
     var dateStr = art.published ? art.published.substring(5, 10) : '';
-    var style = hidden ? ' style="display:none"' : '';
-    return '<div class="ticker-item"' + style + '>'
+    return '<div class="ticker-item"' + (hidden ? ' style="display:none"' : '') + '>'
       + '<div class="ticker-team">' + item.team + '</div>'
-      + '<div style="flex:1"><div>'
-      + '<span class="ticker-prospect">' + item.prospect + '</span> '
+      + '<div style="flex:1"><div><span class="ticker-prospect">' + item.prospect + '</span> '
       + (art.link ? '<a href="' + art.link + '" target="_blank" style="color:var(--accent);text-decoration:none;">' + title + '</a>' : '<span style="color:var(--text)">' + title + '</span>')
-      + '</div>'
-      + '<div class="ticker-source">' + (art.source || '') + '</div></div>'
-      + '<div class="ticker-date">' + dateStr + '</div>'
-      + '</div>';
+      + '</div><div class="ticker-source">' + (art.source || '') + '</div></div>'
+      + '<div class="ticker-date">' + dateStr + '</div></div>';
   }
-
-  var html = news.slice(0, 40).map(function(n) { return buildItem(n, false); }).join('')
+  listEl.innerHTML = news.slice(0, 40).map(function(n) { return buildItem(n, false); }).join('')
     + markets.slice(0, 20).map(function(m) { return buildItem(m, true); }).join('');
-
-  listEl.innerHTML = html;
 }
 
 function barColor(score) {
