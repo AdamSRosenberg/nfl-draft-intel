@@ -601,15 +601,29 @@ function renderMockDraft(picks) {
       reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,193,7,.08);border-radius:6px;font-size:11px;color:var(--amber);">&#9733; New to the mock this run — signal just emerged</div>';
     }
 
-    // Team context — only mention the need if the prospect actually fills it
-    reason += '<div style="margin-bottom:8px;">The <strong style="color:var(--text);">' + p.team + '</strong> ';
-    if (posMatch) {
-      reason += need.note + '. <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') is a direct positional fit.';
+    // Team context — signal-first, positional fit only when it actually applies
+    if (sc >= 8 && hasArticle) {
+      // Strong signal — lead with the data
+      if (posMatch) {
+        reason += '<div style="margin-bottom:8px;">' + p.team + ' have been linked to <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') by beat reporters — and it makes sense: ' + need.note + '.</div>';
+      } else {
+        reason += '<div style="margin-bottom:8px;">Beat reporters are connecting <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') to ' + p.team + '. This is a best-player-available call — the signal is real even if the position isn\'t the primary need.</div>';
+      }
+    } else if (rankDiff <= 1) {
+      // Consensus lock
+      if (posMatch) {
+        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') falls exactly to ' + p.team + ' at pick #' + p.pick + ' — and fills a genuine need. ' + need.note + '.</div>';
+      } else {
+        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> is the consensus #' + p.consensus_rank + ' player and simply falls here. Best player available — ' + p.team + ' take the best on the board.</div>';
+      }
     } else {
-      // Prospect doesn't match team need — lead with the prospect, not the need
-      reason += 'are targeting <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') here — signal and consensus rank override their primary positional need.';
+      // Fallback
+      if (posMatch) {
+        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') addresses a real need for ' + p.team + ': ' + need.note + '.</div>';
+      } else {
+        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') is the best prospect available for ' + p.team + ' at this slot.</div>';
+      }
     }
-    reason += '</div>';
 
     // Consensus
     if (rankDiff === 0) {
