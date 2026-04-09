@@ -1063,7 +1063,34 @@ def aggregate(refresh=False):
 
     # Generate signal-driven mock draft
     try:
-        output["mock_draft"] = generate_mock_draft(output["prospects"])
+        new_mock = generate_mock_draft(output["prospects"])
+        # Load previous mock draft to compute movement
+        prev_mock = {}
+        prev_path = Path("draft_intel.json")
+        if prev_path.exists():
+            try:
+                prev_data = json.loads(prev_path.read_text())
+                for pick in prev_data.get("mock_draft", []):
+                    prev_mock[pick["prospect"]] = pick["pick"]
+            except Exception:
+                pass
+        # Annotate each pick with movement vs previous run
+        for pick in new_mock:
+            prospect = pick["prospect"]
+            prev_pick = prev_mock.get(prospect)
+            if prev_pick is None:
+                pick["movement"] = "NEW"
+                pick["prev_pick"] = None
+            elif prev_pick == pick["pick"]:
+                pick["movement"] = "STABLE"
+                pick["prev_pick"] = prev_pick
+            elif prev_pick > pick["pick"]:
+                pick["movement"] = "UP"
+                pick["prev_pick"] = prev_pick
+            else:
+                pick["movement"] = "DOWN"
+                pick["prev_pick"] = prev_pick
+        output["mock_draft"] = new_mock
         print(f"  Mock draft: {len(output['mock_draft'])} picks generated")
     except Exception as e:
         print(f"  Mock draft error: {e}")
