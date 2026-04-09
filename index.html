@@ -276,7 +276,7 @@ function render(data) {
 
   document.getElementById('s-total').textContent = data.prospects.length;
   document.getElementById('s-signal').textContent = withSignal.length;
-  document.getElementById('s-hot').textContent = hottest ? hottest.name.split(' ').slice(-1)[0] : '—';
+  document.getElementById('s-hot').textContent = hot.name; document.getElementById('s-hot').style.fontSize = hot.name.length > 14 ? '13px' : '18px';
   document.getElementById('s-hot-sub').textContent = hottest ? hottest.total_signal_score + ' pts signal' : '—';
   document.getElementById('s-days').textContent = days;
 
@@ -494,9 +494,10 @@ function toggleMockDraft() {
   if (board.style.display === 'none') {
     board.style.display = 'block';
     btn.textContent = '\u25b2 Hide Mock Draft';
-    if (board.children.length === 0) {
-      if (window._mockData) { renderMockDraft(window._mockData); }
-      else { fetch('draft_intel.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){ window._mockData=d.mock_draft; window._sd=d; renderMockDraft(d.mock_draft); }); }
+    if (window._mockData && window._mockData.length) {
+      renderMockDraft(window._mockData);
+    } else {
+      fetch('draft_intel.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){ window._mockData=d.mock_draft; window._sd=d; renderMockDraft(d.mock_draft); });
     }
   } else {
     board.style.display = 'none';
@@ -733,7 +734,7 @@ function filterFeed(type, btn) {
   document.querySelectorAll('.ticker-item').forEach(function(item) {
     var srcEl = item.querySelector('.ticker-source');
     var srcText = srcEl ? srcEl.textContent.trim() : '';
-    var isMarket = MARKET_SOURCES.some(function(ms) { return srcText.indexOf(ms) > -1; });
+    var isMarket = MARKET_SOURCES.some(function(ms) { return srcText === ms || srcText.indexOf(ms) !== -1; });
     if (type === 'all') {
       item.style.display = '';
     } else if (type === 'news') {
