@@ -206,6 +206,8 @@ def _score_prediction_markets(markets, results, prospects, source, title_key, ye
             "source": source,
             "published": datetime.now().isoformat(),
         })
+GOOGLE_NEWS_BASE = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q="
+
 def fetch_google_news(prospect_name, days_back=7):
     """Search Google News RSS for a prospect and return recent articles."""
     cache_url = f"gnews:{prospect_name}"
