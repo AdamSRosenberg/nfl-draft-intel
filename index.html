@@ -577,7 +577,7 @@ var TEAM_NEEDS = {
     if (sc >= 8 && hasArticle) {
       reason += '<div style="margin-top:6px;padding:7px 10px;background:rgba(4,247,255,.07);border-radius:6px;border-left:2px solid var(--accent);">'
         + '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'
-        + (p.top_article_source === 'Kalshi' || p.top_article_source === 'Polymarket' ? '&#128176; Market signal' : '&#128240; Beat reporter signal')
+        + (p.top_article_source === 'Kalshi' || p.top_article_source === 'Polymarket' ? '💰 Market signal' : '🎵 Beat reporter signal')
         + ' &mdash; ' + sc + ' pts</div>'
         + (hasLink ? '<a href="'+p.top_article_link+'" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;line-height:1.4;">'+p.top_article_title+'</a>' : '<span style="font-size:11px;color:var(--text);">'+p.top_article_title+'</span>')
         + (p.top_article_source ? '<span style="color:var(--dim);font-size:10px;margin-left:6px;">'+p.top_article_source+'</span>' : '')
