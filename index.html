@@ -678,6 +678,58 @@ function renderMockDraft(picks) {
   el.innerHTML = html;
 }
 
+function doSearch(q) {
+  q = (q || '').trim().toLowerCase();
+  var out = document.getElementById('searchOut');
+  if (!out) return;
+  if (!q) { out.innerHTML = ''; return; }
+  var data = window._sd;
+  if (!data) {
+    fetch('draft_intel.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){ window._sd=d; _runSearch(q, out, d); });
+  } else {
+    _runSearch(q, out, data);
+  }
+}
+
+function _runSearch(q, out, data) {
+  var prospects = (data.prospects || []).filter(function(p) {
+    return p.name.toLowerCase().indexOf(q) > -1;
+  });
+  if (!prospects.length) {
+    out.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px 0;">No prospects found for "' + q + '"</p>';
+    return;
+  }
+  out.innerHTML = prospects.slice(0, 5).map(function(p) {
+    var topTeams = (p.teams || []).sort(function(a,b){return b.score-a.score;}).slice(0,3);
+    var teamsHtml = topTeams.map(function(t) {
+      var col = t.score>=15?'var(--green)':t.score>=5?'var(--amber)':'var(--muted)';
+      var sigs = (t.top_signals||[]).slice(0,3).map(function(s){
+        return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 5px;font-size:10px;margin-right:2px;">'+s+'</span>';
+      }).join('');
+      var topArt = t.top_articles && t.top_articles[0];
+      return '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">'
+        + '<div style="flex:1;">'
+        + '<b style="color:var(--text);font-size:13px">'+t.team+'</b>'
+        + (sigs ? '<div style="margin-top:3px;">'+sigs+'</div>' : '')
+        + (topArt ? '<div style="margin-top:3px;"><a href="'+(topArt.link||'#')+'" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">'+topArt.title+'</a></div>' : '')
+        + '</div>'
+        + '<div style="font-size:18px;font-weight:800;color:'+col+';margin-left:10px;">'+t.score+'</div>'
+        + '</div>';
+    }).join('');
+    var mockPick = (data.mock_draft||[]).find(function(m){ return m.prospect===p.name||m.name===p.name; });
+    return '<div class="ai-panel" style="margin-bottom:10px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+      + '<div><div style="font-size:16px;font-weight:700;color:var(--text);">'+p.name+'</div>'
+      + '<div style="font-size:11px;color:var(--muted);">'+p.pos+' &middot; '+p.college+' &middot; Consensus #'+p.consensus_rank+'</div></div>'
+      + '<div style="font-size:20px;font-weight:800;color:var(--accent);">'+p.total_signal_score+'pts</div>'
+      + '</div>'
+      + (mockPick ? '<div style="background:var(--surface);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;color:var(--muted);">ScottBot mock: <strong style="color:var(--text);">Pick #'+mockPick.pick+' – '+mockPick.team+'</strong> <span style="color:'+(mockPick.confidence==='HIGH'?'var(--green)':'var(--amber)')+';">'+mockPick.confidence+'</span></div>' : '')
+      + '<div style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Team signal ('+topTeams.length+' linked)</div>'
+      + teamsHtml
+      + '</div>';
+  }).join('');
+}
+
 function doTeamSearch(q) {
   q = (q || '').trim().toLowerCase();
   var out = document.getElementById('teamSearchOut');
