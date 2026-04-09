@@ -547,6 +547,14 @@ var TEAM_NEEDS = {
 
     // Build reason — always positive, always informative
     var reason = '<div style="font-size:12px;color:var(--muted);line-height:1.7;">';
+    // Movement context at top
+    if (p.movement === 'UP' && p.prev_pick) {
+      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:var(--green)11;border-radius:6px;font-size:11px;color:var(--green);">&#9650; Moved up '+(p.prev_pick-(p.pick||i+1))+' spot'+(p.prev_pick-(p.pick||i+1)>1?'s':'')+' since last run (was pick #'+p.prev_pick+')</div>';
+    } else if (p.movement === 'DOWN' && p.prev_pick) {
+      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,77,109,.08);border-radius:6px;font-size:11px;color:#ff4d6d;">&#9660; Slipped '+(( p.pick||i+1)-p.prev_pick)+' spot'+(((p.pick||i+1)-p.prev_pick)>1?'s':'')+' since last run (was pick #'+p.prev_pick+')</div>';
+    } else if (p.movement === 'NEW') {
+      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:var(--amber)11;border-radius:6px;font-size:11px;color:var(--amber);">&#9733; New to the mock draft this run — signal just emerged</div>';
+    }
 
     // 1. Lead with team context
     reason += '<div style="margin-bottom:8px;">The <strong style="color:var(--text);">' + p.team + '</strong> ';
@@ -590,7 +598,23 @@ var TEAM_NEEDS = {
 
     html += '<details style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;overflow:hidden;">'
       + '<summary style="display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;padding:9px 14px;cursor:pointer;list-style:none;">'
-      + '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--dim);font-family:var(--mono);">'+(p.pick||i+1)+'</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);">'+p.team+'</div></div>'
+      + (function(){
+      var mov = p.movement || 'STABLE';
+      var prevPick = p.prev_pick;
+      var movBadge = '';
+      if (mov === 'UP') {
+        var spots = prevPick - (p.pick||i+1);
+        movBadge = '<div style="font-size:9px;color:var(--green);font-weight:700;margin-top:1px;">&#9650; +'+spots+'</div>';
+      } else if (mov === 'DOWN') {
+        var spots = (p.pick||i+1) - prevPick;
+        movBadge = '<div style="font-size:9px;color:var(--red,#ff4d6d);font-weight:700;margin-top:1px;">&#9660; -'+spots+'</div>';
+      } else if (mov === 'NEW') {
+        movBadge = '<div style="font-size:8px;color:var(--amber);font-weight:700;margin-top:1px;">NEW</div>';
+      } else {
+        movBadge = '<div style="font-size:8px;color:var(--muted);margin-top:1px;">&#8212;</div>';
+      }
+      return '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--dim);font-family:var(--mono);">'+(p.pick||i+1)+'</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);">'+p.team+'</div>'+movBadge+'</div>';
+    })()
       + '<div><div style="font-size:14px;font-weight:600;color:var(--text);">'+name+'</div>'
       + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+p.pos+' &middot; '+p.college+(p.consensus_rank?' &middot; Consensus #'+p.consensus_rank:'')+'</div></div>'
       + '<div style="text-align:right;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+confColor+'22;color:'+confColor+';">'+conf+'</span>'
