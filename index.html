@@ -276,7 +276,7 @@ function render(data) {
 
   document.getElementById('s-total').textContent = data.prospects.length;
   document.getElementById('s-signal').textContent = withSignal.length;
-  document.getElementById('s-hot').textContent = hot.name; document.getElementById('s-hot').style.fontSize = hot.name.length > 14 ? '13px' : '18px';
+  document.getElementById('s-hot').textContent = data.prospects[0].name; document.getElementById('s-hot').style.fontSize = data.prospects[0].name.length > 14 ? '13px' : '18px';
   document.getElementById('s-hot-sub').textContent = hottest ? hottest.total_signal_score + ' pts signal' : '—';
   document.getElementById('s-days').textContent = days;
 
