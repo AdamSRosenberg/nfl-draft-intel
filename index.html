@@ -385,22 +385,67 @@ function renderMovers(data) {
 }
 
 function renderTicker(data) {
-  const articles = data.prospects.flatMap(p =>
-    p.teams.flatMap(t => (t.top_articles||[]).map(a => ({...a, prospect: (p.prospect||p.name||""), team: t.team})))
-  ).filter(a => a.title).sort((a,b) => new Date(b.published||0) - new Date(a.published||0));
+  var MARKET_SOURCES = ['Kalshi', 'Polymarket'];
+  var el = document.getElementById('headlines-ticker');
+  if (!el) return;
 
-  document.getElementById('ticker-list').innerHTML = articles.slice(0, 12).map(a => {
-    const d = a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
-    return `<div class="ticker-item">
-      <div class="ticker-team">${a.team}</div>
-      <div style="flex:1">
-        <div><span class="ticker-prospect">${a.prospect}</span>
-        <a href="${a.link}" target="_blank" style="color:var(--text);text-decoration:none">${a.title}</a></div>
-        <div class="ticker-source">${a.source}</div>
-      </div>
-      <div class="ticker-date">${d}</div>
-    </div>`;
-  }).join('') || '<div style="padding:16px;color:var(--muted);font-family:var(--mono);font-size:12px">No headlines yet — run scraper for live data</div>';
+  var news = [], markets = [];
+
+  (data.prospects || []).forEach(function(p) {
+    (p.teams || []).forEach(function(t) {
+      if (t.team === 'GENERAL') return;
+      (t.top_articles || []).slice(0, 3).forEach(function(art) {
+        var src = art.source || '';
+        var isMarket = MARKET_SOURCES.indexOf(src) > -1;
+        var item = {
+          prospect: p.name, pos: p.pos, team: t.team,
+          score: t.score, art: art, isMarket: isMarket
+        };
+        if (isMarket) markets.push(item);
+        else news.push(item);
+      });
+    });
+  });
+
+  // Sort by team signal score
+  news.sort(function(a, b) { return b.score - a.score; });
+  markets.sort(function(a, b) { return b.score - a.score; });
+
+  // Dedupe news by title
+  var seenTitles = {};
+  news = news.filter(function(n) {
+    var k = n.art.title;
+    if (seenTitles[k]) return false;
+    seenTitles[k] = true;
+    return true;
+  });
+
+  window._tickerNews = news;
+  window._tickerMarkets = markets;
+
+  function buildItem(item, hidden) {
+    var art = item.art;
+    var title = (art.title || '').replace(/\[Kalshi[^\]]*\]/g, '').replace(/\[Polymarket[^\]]*\]/g, '').trim();
+    var dateStr = art.published ? art.published.substring(5, 10) : '';
+    var display = hidden ? ' style="display:none"' : '';
+    return '<div class="ticker-item"' + display + '>'
+      + '<div class="ticker-team">' + item.team + '</div>'
+      + '<div style="flex:1"><div>'
+      + '<span class="ticker-prospect">' + item.prospect + '</span> '
+      + (art.link ? '<a href="' + art.link + '" target="_blank" style="color:var(--accent);text-decoration:none;">' + title + '</a>' : '<span>' + title + '</span>')
+      + '</div>'
+      + '<div class="ticker-source">' + (art.source || '') + '</div></div>'
+      + '<div class="ticker-date">' + dateStr + '</div>'
+      + '</div>';
+  }
+
+  // Keep existing tabs + head, rebuild items
+  var tabs = el.querySelector('.feed-tabs');
+  var head = el.querySelector('.ticker-head');
+  var itemsHtml = news.slice(0, 40).map(function(n) { return buildItem(n, false); }).join('')
+    + markets.slice(0, 40).map(function(m) { return buildItem(m, true); }).join('');
+
+  el.innerHTML = (tabs ? tabs.outerHTML : '') + (head ? head.outerHTML : '') + itemsHtml;
 }
 
 function barColor(score) {
