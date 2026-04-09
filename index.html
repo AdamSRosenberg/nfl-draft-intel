@@ -690,7 +690,7 @@ function _runTeamSearch(q, out) {
     return;
   }
 
-  var DRAFT_ORDER = {Raiders:1,Jets:2,Cardinals:3,Titans:4,Giants:5,Browns:6,Commanders:7,Saints:8,Chiefs:9,Bengals:10,Dolphins:11,Cowboys:12,Rams:13,Ravens:14,Buccaneers:15,Lions:17,Vikings:18,Panthers:19,Steelers:21,Chargers:22,Eagles:23,Bears:25,Bills:26,"49ers":27,Texans:28,Patriots:31,Seahawks:32};
+  var DRAFT_ORDER = {Raiders:1,Jets:2,Cardinals:3,Titans:4,Giants:5,Browns:6,Commanders:7,Saints:8,Chiefs:9,Bengals:10,Dolphins:11,Cowboys:12,Rams:13,Ravens:14,Buccaneers:15,Lions:17,Vikings:18,Panthers:19,Steelers:21,Chargers:22,Eagles:23,Bears:25,Bills:26,'49ers':27,Texans:28,Patriots:31,Seahawks:32};
   var NO_PICK = {Falcons:1,Colts:1,Packers:1,Jaguars:1,Broncos:1};
 
   out.innerHTML = matchedTeams.map(function(teamName) {
@@ -698,23 +698,45 @@ function _runTeamSearch(q, out) {
     var pickNum = DRAFT_ORDER[teamName];
     var noPick = NO_PICK[teamName];
     var mockPick = mockDraft.find(function(m) { return m.team === teamName; });
+    var topSignalPick = picks[0];
+
+    // Check if mock pick differs from top signal pick
+    var mockDiffersFromSignal = mockPick && topSignalPick && (mockPick.prospect !== topSignalPick.prospect.name);
 
     var pickBadge = noPick
       ? '<span class="team-pick-badge" style="color:var(--red);">No Round 1 Pick</span>'
       : pickNum ? '<span class="team-pick-badge">Pick #' + pickNum + '</span>' : '';
 
-    var mockBox = mockPick
-      ? '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">'
-        + '<div><div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">ScottBot Mock Pick</div>'
-        + '<div style="font-size:16px;font-weight:700;color:var(--text);">' + mockPick.prospect + '</div>'
+    var mockBox = '';
+    if (mockPick) {
+      var confColor = mockPick.confidence === 'HIGH' ? 'var(--green)' : 'var(--amber)';
+      mockBox = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">'
+        + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">ScottBot Mock Pick</div>'
+        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">'
+        + '<div><div style="font-size:18px;font-weight:700;color:var(--text);">' + mockPick.prospect + '</div>'
         + '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + mockPick.pos + ' &middot; ' + mockPick.college + (mockPick.consensus_rank ? ' &middot; Consensus #' + mockPick.consensus_rank : '') + '</div>'
-        + '<div style="font-size:11px;color:var(--dim);margin-top:2px;">' + mockPick.note + '</div></div>'
-        + '<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;background:' + (mockPick.confidence==='HIGH'?'var(--green)':'var(--amber)') + '22;color:' + (mockPick.confidence==='HIGH'?'var(--green)':'var(--amber)') + ';">' + mockPick.confidence + '</span>'
-        + '</div>'
-      : (noPick ? '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);">No Round 1 pick — traded away.</div>' : '');
+        + '<div style="font-size:11px;color:var(--dim);margin-top:3px;">' + mockPick.note
+        + (mockPick.signal_score > 0 ? ' &middot; ' + mockPick.signal_score + ' signal pts' : '') + '</div>';
+
+      // If mock differs from top signal, explain why
+      if (mockDiffersFromSignal) {
+        mockBox += '<div style="margin-top:8px;padding:7px 10px;background:rgba(255,193,7,.08);border-radius:6px;border-left:2px solid var(--amber);font-size:11px;color:var(--amber);">'
+          + '&#9651; Note: <strong>' + topSignalPick.prospect.name + '</strong> has the highest raw signal (' + topSignalPick.teamData.score + ' pts) '
+          + 'but <strong>' + mockPick.prospect + '</strong> ranks #' + mockPick.consensus_rank + ' in consensus — matching this pick slot exactly. '
+          + 'ScottBot weights consensus rank heavily for picks where no dominant beat reporter signal exists.'
+          + '</div>';
+      }
+
+      mockBox += '</div>'
+        + '<span style="font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;background:' + confColor + '22;color:' + confColor + ';">' + mockPick.confidence + '</span>'
+        + '</div></div>';
+    } else if (noPick) {
+      mockBox = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);">No Round 1 pick — traded away.</div>';
+    }
 
     var prospectsHtml = picks.slice(0, 8).map(function(item) {
       var p = item.prospect, t = item.teamData;
+      var isMockPick = mockPick && mockPick.prospect === p.name;
       var conf = t.score >= 15 ? 'HIGH' : t.score >= 5 ? 'MEDIUM' : 'LOW';
       var col = conf === 'HIGH' ? 'var(--green)' : conf === 'MEDIUM' ? 'var(--amber)' : 'var(--muted)';
       var sigs = (t.top_signals || []).map(function(s) {
@@ -723,10 +745,11 @@ function _runTeamSearch(q, out) {
       var topArt = t.top_articles && t.top_articles[0];
       return '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">'
         + '<div style="flex:1;">'
-        + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + (p.prospect||p.name||"") + '</div>'
+        + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + p.name
+        + (isMockPick ? ' <span style="font-size:10px;background:var(--green)22;color:var(--green);border-radius:3px;padding:1px 6px;">ScottBot Pick</span>' : '') + '</div>'
         + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">' + p.pos + ' &middot; ' + p.college + (p.consensus_rank ? ' &middot; Consensus #' + p.consensus_rank : '') + '</div>'
         + (sigs ? '<div style="margin-top:5px;">' + sigs + '</div>' : '')
-        + (topArt ? '<div style="margin-top:5px;"><a href="' + topArt.link + '" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">' + topArt.title + '</a><span style="color:var(--dim);font-size:10px;margin-left:6px;">' + topArt.source + '</span></div>' : '')
+        + (topArt ? '<div style="margin-top:5px;"><a href="' + topArt.link + '" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;">' + topArt.title.substring(0,80) + '</a><span style="color:var(--dim);font-size:10px;margin-left:6px;">' + topArt.source + '</span></div>' : '')
         + '</div>'
         + '<div style="text-align:right;flex-shrink:0;">'
         + '<div style="font-size:20px;font-weight:800;color:' + col + ';">' + t.score + '</div>'
@@ -742,12 +765,11 @@ function _runTeamSearch(q, out) {
       + pickBadge
       + '</div>'
       + mockBox
-      + '<div style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Prospect Signal (' + picks.length + ' linked)</div>'
+      + '<div style="font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Beat Reporter Signal (' + picks.length + ' prospects linked)</div>'
       + prospectsHtml
       + '</div>';
   }).join('');
 }
-
 function filterFeed(type, btn) {
   document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
   if (btn) btn.classList.add('active');
