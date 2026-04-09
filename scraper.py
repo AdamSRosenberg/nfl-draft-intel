@@ -112,15 +112,13 @@ def fetch_polymarket_signals(results, prospects):
 
 def _score_prediction_markets(markets, results, prospects, source, title_key, yes_price_key, ticker_key):
     """
-    Score prediction markets as a SECONDARY signal.
-    Max ONE contribution per prospect-team pair — markets inform, not dominate.
-    Probability tiers: >60% = 5pts, 40-60% = 3pts, 20-40% = 1pt
-    This keeps beat reporter signal as primary and markets as a useful tiebreaker.
+    Score prediction markets using conviction = probability x log(volume).
+    High volume + high probability = smart money. Low volume = noise.
+    Capped at ONE contribution per prospect-team pair (best conviction wins).
     """
-    # Track scored pairs to prevent accumulation across multiple markets
+    import math
     scored_pairs = set()
 
-    # Sort by probability descending so highest-confidence market wins each pair
     def get_price(m):
         try:
             p = float(m.get(yes_price_key, 0) or 0)
@@ -128,7 +126,17 @@ def _score_prediction_markets(markets, results, prospects, source, title_key, ye
         except:
             return 0
 
-    sorted_markets = sorted(markets, key=get_price, reverse=True)
+    def get_volume(m):
+        try:
+            vol = float(m.get("volume_fp", 0) or m.get("volume", 0) or 0)
+            return vol / 100.0
+        except:
+            return 0
+
+    def conviction_score(m):
+        return get_price(m) * math.log(get_volume(m) + 1)
+
+    sorted_markets = sorted(markets, key=conviction_score, reverse=True)
 
     for market in sorted_markets:
         title = str(market.get(title_key, "")).lower()
@@ -151,7 +159,6 @@ def _score_prediction_markets(markets, results, prospects, source, title_key, ye
                 matched_team = team
                 break
 
-        # For pick-number markets (Kalshi KXNFLDRAFTPICK), match by pick number
         try:
             strike = market.get("custom_strike", {})
             if strike:
@@ -164,40 +171,42 @@ def _score_prediction_markets(markets, results, prospects, source, title_key, ye
         except:
             pass
 
-        pair_key = f"{matched_prospect}:{matched_team}"
+        pair_key = matched_prospect + ":" + matched_team
         if pair_key in scored_pairs:
-            continue  # Already have the best market signal for this pair
+            continue
         scored_pairs.add(pair_key)
 
-        try:
-            prob = get_price(market)
-        except:
+        prob = get_price(market)
+        vol = get_volume(market)
+        if prob < 0.15:
             continue
 
-        if prob < 0.20:
-            continue
-
-        if prob >= 0.60:
-            signal_pts, level = 5, "HIGH"
-        elif prob >= 0.40:
-            signal_pts, level = 3, "MEDIUM"
-        else:
-            signal_pts, level = 1, "LOW"
+        # conviction = prob * log(vol) — rewards high volume + high confidence
+        conviction = prob * math.log(vol + 1)
+        if conviction >= 5.0:    signal_pts, level = 8, "HIGH"
+        elif conviction >= 3.0:  signal_pts, level = 6, "HIGH"
+        elif conviction >= 1.5:  signal_pts, level = 4, "MEDIUM"
+        elif conviction >= 0.5:  signal_pts, level = 2, "LOW"
+        else:                    signal_pts, level = 1, "LOW"
 
         market_title = str(market.get(title_key, ""))
         ticker = str(market.get(ticker_key, ""))
-        link = f"https://kalshi.com/markets/{ticker.lower().split('-')[0]}/{ticker}" if source == "Kalshi" else f"https://polymarket.com/event/{ticker}"
+        if source == "Kalshi":
+            link = "https://kalshi.com/markets/" + ticker.lower().split("-")[0] + "/" + ticker
+        else:
+            link = "https://polymarket.com/event/" + ticker
+        vol_str = "$" + str(int(vol)) + " vol" if vol > 0 else "low vol"
+        label = source + " " + str(int(prob * 100)) + "% (" + vol_str + ")"
 
         results[matched_prospect][matched_team]["score"] += signal_pts
-        results[matched_prospect][matched_team]["signals"].append(f"{source} {int(prob*100)}%")
+        results[matched_prospect][matched_team]["signals"].append(label)
         results[matched_prospect][matched_team]["signal_levels"].append(level)
         results[matched_prospect][matched_team]["articles"].append({
-            "title": f"[{source} {int(prob*100)}%] {market_title}",
+            "title": "[" + label + "] " + market_title,
             "link": link,
             "source": source,
             "published": datetime.now().isoformat(),
         })
-
 def fetch_google_news(prospect_name, days_back=7):
     """Search Google News RSS for a prospect and return recent articles."""
     cache_url = f"gnews:{prospect_name}"
