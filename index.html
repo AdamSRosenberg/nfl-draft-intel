@@ -727,18 +727,19 @@ function _runTeamSearch(q, out) {
 }
 
 function filterFeed(type, btn) {
-  // Update active tab
   document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  // Show/hide items
+  var MARKET_SOURCES = ['Kalshi', 'Polymarket'];
   document.querySelectorAll('.ticker-item').forEach(function(item) {
-    var src = item.getAttribute('data-source') || 'news';
+    var srcEl = item.querySelector('.ticker-source');
+    var srcText = srcEl ? srcEl.textContent.trim() : '';
+    var isMarket = MARKET_SOURCES.some(function(ms) { return srcText.indexOf(ms) > -1; });
     if (type === 'all') {
       item.style.display = '';
     } else if (type === 'news') {
-      item.style.display = src === 'news' ? '' : 'none';
+      item.style.display = isMarket ? 'none' : '';
     } else if (type === 'markets') {
-      item.style.display = src === 'market' ? '' : 'none';
+      item.style.display = isMarket ? '' : 'none';
     }
   });
 }
