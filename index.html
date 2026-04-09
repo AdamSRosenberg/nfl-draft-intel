@@ -148,6 +148,11 @@
   .team-result-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .team-pick-badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;font-family:var(--mono);color:var(--muted);}
 
+
+  .feed-tabs{display:flex;gap:6px;padding:10px 16px 0;border-bottom:1px solid var(--border);}
+  .feed-tab{font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:5px 5px 0 0;cursor:pointer;border:1px solid transparent;border-bottom:none;color:var(--muted);background:none;transition:all .15s;}
+  .feed-tab.active{color:var(--text);background:var(--surface);border-color:var(--border);margin-bottom:-1px;padding-bottom:5px;}
+  .feed-tab:hover:not(.active){color:var(--text);}
 </style>
 </head>
 <body>
@@ -212,7 +217,12 @@
 
     <div class="section-head">Latest beat reporter headlines</div>
     <div class="headlines-ticker">
-      <div class="ticker-head"><span class="status-dot"></span>Live intel feed</div>
+      <div class="feed-tabs">
+      <button class="feed-tab active" onclick="filterFeed('all',this)">All</button>
+      <button class="feed-tab" onclick="filterFeed('news',this)">📝 News</button>
+      <button class="feed-tab" onclick="filterFeed('markets',this)">💰 Markets</button>
+    </div>
+    <div class="ticker-head" style="border-top:none;"><span class="status-dot"></span>Live intel feed</div>
       <div id="ticker-list"></div>
     </div>
 
@@ -714,6 +724,23 @@ function _runTeamSearch(q, out) {
       + prospectsHtml
       + '</div>';
   }).join('');
+}
+
+function filterFeed(type, btn) {
+  // Update active tab
+  document.querySelectorAll('.feed-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  // Show/hide items
+  document.querySelectorAll('.ticker-item').forEach(function(item) {
+    var src = item.getAttribute('data-source') || 'news';
+    if (type === 'all') {
+      item.style.display = '';
+    } else if (type === 'news') {
+      item.style.display = src === 'news' ? '' : 'none';
+    } else if (type === 'markets') {
+      item.style.display = src === 'market' ? '' : 'none';
+    }
+  });
 }
 </script>
 </body>
