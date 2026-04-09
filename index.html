@@ -495,38 +495,39 @@ function toggleMockDraft() {
 }
 
 function renderMockDraft(picks) {
-  
-var TEAM_NEEDS = {
-  Raiders:    {pos:'QB',  note:'desperately need a franchise QB after years of instability'},
-  Jets:       {pos:'EDGE',note:'need elite pass rush to complement their young defense'},
-  Cardinals:  {pos:'EDGE',note:'rebuilding around a new QB — need weapons and playmakers'},
-  Titans:     {pos:'LB',  note:'overhauling their defense after a brutal season'},
-  Giants:     {pos:'OT',  note:'need to protect their QB and rebuild the offensive line'},
-  Browns:     {pos:'OT',  note:'offensive line has been a glaring weakness for years'},
-  Commanders: {pos:'CB',  note:'loaded at skill positions — looking to add defensive talent'},
-  Saints:     {pos:'WR',  note:'need a true #1 receiver after losing top targets'},
-  Chiefs:     {pos:'WR',  note:'looking to add another weapon with Travis Kelce aging'},
-  Bengals:    {pos:'S',   note:'secondary has been a liability — targeting playmakers in coverage'},
-  Dolphins:   {pos:'WR',  note:'rebuilding their receiver room after offseason departures'},
-  Cowboys:    {pos:'CB',  note:'secondary overhaul underway — premium corner high on their board'},
-  Rams:       {pos:'EDGE',note:'pass rush depth a priority after key free agent losses'},
-  Ravens:     {pos:'OT',  note:'protecting Lamar Jackson always the top priority'},
-  Buccaneers: {pos:'QB',  note:'evaluating their long-term QB situation after Baker's contract year'},
-  Lions:      {pos:'LB',  note:'looking to add linebacker depth to their Super Bowl roster'},
-  Vikings:    {pos:'OT',  note:'committed to Kyler Murray — need to build up front'},
-  Panthers:   {pos:'EDGE',note:'continuing a full roster rebuild under new coaching staff'},
-  Steelers:   {pos:'LB',  note:'linebacker has been their identity — adding to the corps'},
-  Chargers:   {pos:'OT',  note:'protecting Herbert a perennial top priority'},
-  Eagles:     {pos:'CB',  note:'reloading the secondary after a Super Bowl run'},
-  Bears:      {pos:'OT',  note:'building around Caleb Williams — line needs reinforcement'},
-  Bills:      {pos:'CB',  note:'adding secondary help as they push for another Super Bowl run'},
-  '49ers':    {pos:'QB',  note:'QB of the future high on their list after Purdy uncertainty'},
-  Texans:     {pos:'OT',  note:'protecting CJ Stroud as they build a contender'},
-  Patriots:   {pos:'EDGE',note:'full rebuild mode — best player available strategy'},
-  Seahawks:   {pos:'CB',  note:'defense-first rebuild — secondary talent a priority'},
-};
   var el = document.getElementById('mock-draft-board');
   if (!el || !picks || !picks.length) return;
+
+  var TEAM_NEEDS = {
+    Raiders:    {pos:'QB',   note:'desperately need a franchise QB'},
+    Jets:       {pos:'EDGE', note:'need elite pass rush to complement their young defense'},
+    Cardinals:  {pos:'EDGE', note:'rebuilding — need playmakers after firing Gannon'},
+    Titans:     {pos:'LB',   note:'overhauling their defense after a brutal season'},
+    Giants:     {pos:'OT',   note:'need to protect their QB and rebuild the offensive line'},
+    Browns:     {pos:'OT',   note:'offensive line has been a glaring weakness'},
+    Commanders: {pos:'CB',   note:'loaded at skill positions — targeting defensive talent'},
+    Saints:     {pos:'WR',   note:'need a true #1 receiver after losing top targets'},
+    Chiefs:     {pos:'WR',   note:'adding weapons as Kelce ages out'},
+    Bengals:    {pos:'S',    note:'secondary has been a liability — targeting coverage players'},
+    Dolphins:   {pos:'WR',   note:'rebuilding the receiver room after offseason departures'},
+    Cowboys:    {pos:'CB',   note:'secondary overhaul underway'},
+    Rams:       {pos:'EDGE', note:'pass rush depth a priority after key free agent losses'},
+    Ravens:     {pos:'OT',   note:'protecting Lamar Jackson always the top priority'},
+    Buccaneers: {pos:'QB',   note:'evaluating their long-term QB situation'},
+    Lions:      {pos:'LB',   note:'adding linebacker depth to their Super Bowl-caliber roster'},
+    Vikings:    {pos:'OT',   note:'committed to Kyler Murray — building up front'},
+    Panthers:   {pos:'EDGE', note:'full roster rebuild under new coaching staff'},
+    Steelers:   {pos:'LB',   note:'linebacker has been their identity for decades'},
+    Chargers:   {pos:'OT',   note:'protecting Herbert a perennial priority'},
+    Eagles:     {pos:'CB',   note:'reloading the secondary after a Super Bowl run'},
+    Bears:      {pos:'OT',   note:'building around Caleb Williams — line needs reinforcement'},
+    Bills:      {pos:'CB',   note:'adding secondary help as they push for another title'},
+    '49ers':    {pos:'QB',   note:'QB of the future high on list after Purdy uncertainty'},
+    Texans:     {pos:'OT',   note:'protecting CJ Stroud as they build a contender'},
+    Patriots:   {pos:'EDGE', note:'full rebuild — best player available'},
+    Seahawks:   {pos:'CB',   note:'defense-first rebuild — secondary talent a priority'}
+  };
+
   var html = '';
   for (var i = 0; i < picks.length; i++) {
     var p = picks[i];
@@ -538,196 +539,93 @@ var TEAM_NEEDS = {
 
     // Confidence
     var conf, confColor;
-    if (sc >= 20 && rankDiff <= 2) { conf='HIGH'; confColor='var(--green)'; }
-    else if (sc >= 15) { conf='HIGH'; confColor='var(--green)'; }
-    else if (rankDiff === 0 && sc >= 5) { conf='HIGH'; confColor='var(--green)'; }
+    if (sc >= 15 || (rankDiff === 0 && sc >= 5)) { conf='HIGH'; confColor='var(--green)'; }
     else if (sc >= 8 || rankDiff === 0) { conf='MEDIUM'; confColor='var(--amber)'; }
     else if (rankDiff <= 4) { conf='MEDIUM'; confColor='var(--amber)'; }
     else { conf='LOW'; confColor='var(--muted)'; }
 
-    // Build reason — always positive, always informative
-    var reason = '<div style="font-size:12px;color:var(--muted);line-height:1.7;">';
-    // Movement context at top
-    if (p.movement === 'UP' && p.prev_pick) {
-      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:var(--green)11;border-radius:6px;font-size:11px;color:var(--green);">&#9650; Moved up '+(p.prev_pick-(p.pick||i+1))+' spot'+(p.prev_pick-(p.pick||i+1)>1?'s':'')+' since last run (was pick #'+p.prev_pick+')</div>';
-    } else if (p.movement === 'DOWN' && p.prev_pick) {
-      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,77,109,.08);border-radius:6px;font-size:11px;color:#ff4d6d;">&#9660; Slipped '+(( p.pick||i+1)-p.prev_pick)+' spot'+(((p.pick||i+1)-p.prev_pick)>1?'s':'')+' since last run (was pick #'+p.prev_pick+')</div>';
-    } else if (p.movement === 'NEW') {
-      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:var(--amber)11;border-radius:6px;font-size:11px;color:var(--amber);">&#9733; New to the mock draft this run — signal just emerged</div>';
+    // Movement badge
+    var mov = p.movement || 'STABLE';
+    var movBadge = '';
+    if (mov === 'UP' && p.prev_pick) {
+      movBadge = '<div style="font-size:9px;color:var(--green);font-weight:700;margin-top:1px;">&#9650; +' + (p.prev_pick - p.pick) + '</div>';
+    } else if (mov === 'DOWN' && p.prev_pick) {
+      movBadge = '<div style="font-size:9px;color:#ff4d6d;font-weight:700;margin-top:1px;">&#9660; -' + (p.pick - p.prev_pick) + '</div>';
+    } else if (mov === 'NEW') {
+      movBadge = '<div style="font-size:8px;color:var(--amber);font-weight:700;margin-top:1px;">NEW</div>';
+    } else {
+      movBadge = '<div style="font-size:8px;color:var(--muted);margin-top:1px;">&#8212;</div>';
     }
 
-    // 1. Lead with team context
-    reason += '<div style="margin-bottom:8px;">The <strong style="color:var(--text);">' + p.team + '</strong> ';
-    if (need.note) reason += need.note + '.';
-    if (posMatch) reason += ' <strong style="color:var(--text);">' + name + '</strong> at <strong style="color:var(--text);">' + p.pos + '</strong> is a direct positional fit.';
+    // Reason
+    var reason = '<div style="font-size:12px;color:var(--muted);line-height:1.7;">';
+
+    // Movement banner
+    if (mov === 'UP' && p.prev_pick) {
+      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(45,204,112,.08);border-radius:6px;font-size:11px;color:var(--green);">&#9650; Moved up ' + (p.prev_pick - p.pick) + ' spot' + ((p.prev_pick - p.pick) > 1 ? 's' : '') + ' since last run (was pick #' + p.prev_pick + ')</div>';
+    } else if (mov === 'DOWN' && p.prev_pick) {
+      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,77,109,.08);border-radius:6px;font-size:11px;color:#ff4d6d;">&#9660; Slipped ' + (p.pick - p.prev_pick) + ' spot' + ((p.pick - p.prev_pick) > 1 ? 's' : '') + ' since last run (was pick #' + p.prev_pick + ')</div>';
+    } else if (mov === 'NEW') {
+      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,193,7,.08);border-radius:6px;font-size:11px;color:var(--amber);">&#9733; New to the mock this run — signal just emerged</div>';
+    }
+
+    // Team context
+    reason += '<div style="margin-bottom:8px;">The <strong style="color:var(--text);">' + p.team + '</strong> ' + need.note + '.';
+    if (posMatch) { reason += ' <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') is a direct positional fit.'; }
     reason += '</div>';
 
-    // 2. Consensus context
+    // Consensus
     if (rankDiff === 0) {
-      reason += '<div style="margin-bottom:8px;">&#9679; <strong style="color:var(--green);">Consensus lock:</strong> Ranked <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> by Walter Football, PFF, CBS Sports, Draft Network — exact match to pick #' + p.pick + '. No mock draft has him slipping past this slot.</div>';
+      reason += '<div style="margin-bottom:8px;">&#9679; <strong style="color:var(--green);">Consensus lock:</strong> Ranked <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> by Walter Football, PFF, CBS Sports, Draft Network — exact match to pick #' + p.pick + '.</div>';
     } else if (rankDiff <= 3) {
-      reason += '<div style="margin-bottom:8px;">&#9679; <strong style="color:var(--amber);">Consensus range:</strong> Projected <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> by major outlets — only ' + rankDiff + ' spot' + (rankDiff>1?'s':'') + ' from this pick. Well within expected range.</div>';
-    } else if (rankDiff <= 8) {
-      reason += '<div style="margin-bottom:8px;">&#9679; Consensus has ' + name + ' around <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> — ' + rankDiff + ' spots away. Signal is pulling him toward ' + p.team + '.</div>';
+      reason += '<div style="margin-bottom:8px;">&#9679; Consensus has ' + name + ' around <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> — only ' + rankDiff + ' spot' + (rankDiff > 1 ? 's' : '') + ' off this slot.</div>';
+    } else {
+      reason += '<div style="margin-bottom:8px;">&#9679; Consensus rank <strong style="color:var(--text);">#' + (p.consensus_rank||'?') + '</strong> — best available at pick #' + p.pick + ' given current signal.</div>';
     }
 
-    // 3. Beat reporter / market signal
+    // Signal article
     var hasArticle = p.top_article_title && p.top_article_title.length > 0;
     var hasLink = p.top_article_link && p.top_article_link.length > 0;
-    if (sc >= 8 && hasArticle) {
-      reason += '<div style="margin-top:6px;padding:7px 10px;background:rgba(4,247,255,.07);border-radius:6px;border-left:2px solid var(--accent);">'
-        + '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'
-        + (p.top_article_source === 'Kalshi' || p.top_article_source === 'Polymarket' ? '💰 Market signal' : '🎵 Beat reporter signal')
-        + ' &mdash; ' + sc + ' pts</div>'
-        + (hasLink ? '<a href="'+p.top_article_link+'" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;line-height:1.4;">'+p.top_article_title+'</a>' : '<span style="font-size:11px;color:var(--text);">'+p.top_article_title+'</span>')
-        + (p.top_article_source ? '<span style="color:var(--dim);font-size:10px;margin-left:6px;">'+p.top_article_source+'</span>' : '')
-        + '</div>';
-    } else if (sc > 0 && hasArticle) {
-      reason += '<div style="margin-top:6px;font-size:11px;color:var(--muted);">Some chatter: '
-        + (hasLink ? '<a href="'+p.top_article_link+'" target="_blank" style="color:var(--accent);text-decoration:none;">'+p.top_article_title+'</a>' : p.top_article_title)
+    var isMarket = p.top_article_source === 'Kalshi' || p.top_article_source === 'Polymarket';
+    if (sc >= 5 && hasArticle) {
+      var icon = isMarket ? '💰' : '🎵';
+      var label = isMarket ? 'Market signal' : 'Beat reporter signal';
+      reason += '<div style="margin-top:6px;padding:7px 10px;background:rgba(4,247,255,.06);border-radius:6px;border-left:2px solid var(--accent);">'
+        + '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">' + icon + ' ' + label + ' — ' + sc + ' pts</div>'
+        + (hasLink ? '<a href="' + p.top_article_link + '" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;line-height:1.4;">' + p.top_article_title + '</a>' : '<span style="font-size:11px;color:var(--text);">' + p.top_article_title + '</span>')
+        + (p.top_article_source ? '<span style="color:var(--dim);font-size:10px;margin-left:6px;">' + p.top_article_source + '</span>' : '')
         + '</div>';
     }
 
-    // 4. Signal keywords
-    var sigs = (p.top_signals||[]).map(function(s){
-      return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;font-size:10px;margin-right:3px;">'+s+'</span>';
+    // Signal keywords
+    var sigs = (p.top_signals || []).map(function(s) {
+      return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;font-size:10px;margin-right:3px;">' + s + '</span>';
     }).join('');
-    if (sigs) reason += '<div style="margin-top:6px;">'+sigs+'</div>';
+    if (sigs) { reason += '<div style="margin-top:6px;">' + sigs + '</div>'; }
 
     reason += '</div>';
 
     html += '<details style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;overflow:hidden;">'
       + '<summary style="display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;padding:9px 14px;cursor:pointer;list-style:none;">'
-      + (function(){
-      var mov = p.movement || 'STABLE';
-      var prevPick = p.prev_pick;
-      var movBadge = '';
-      if (mov === 'UP') {
-        var spots = prevPick - (p.pick||i+1);
-        movBadge = '<div style="font-size:9px;color:var(--green);font-weight:700;margin-top:1px;">&#9650; +'+spots+'</div>';
-      } else if (mov === 'DOWN') {
-        var spots = (p.pick||i+1) - prevPick;
-        movBadge = '<div style="font-size:9px;color:var(--red,#ff4d6d);font-weight:700;margin-top:1px;">&#9660; -'+spots+'</div>';
-      } else if (mov === 'NEW') {
-        movBadge = '<div style="font-size:8px;color:var(--amber);font-weight:700;margin-top:1px;">NEW</div>';
-      } else {
-        movBadge = '<div style="font-size:8px;color:var(--muted);margin-top:1px;">&#8212;</div>';
-      }
-      return '<div style="text-align:center;"><div style="font-size:17px;font-weight:800;color:var(--dim);font-family:var(--mono);">'+(p.pick||i+1)+'</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);">'+p.team+'</div>'+movBadge+'</div>';
-    })()
-      + '<div><div style="font-size:14px;font-weight:600;color:var(--text);">'+name+'</div>'
-      + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">'+p.pos+' &middot; '+p.college+(p.consensus_rank?' &middot; Consensus #'+p.consensus_rank:'')+'</div></div>'
-      + '<div style="text-align:right;"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+confColor+'22;color:'+confColor+';">'+conf+'</span>'
-      + '<div style="font-size:9px;color:var(--dim);margin-top:2px;">'+(sc>0?sc+'pts signal':'consensus')+'</div></div>'
+      + '<div style="text-align:center;">'
+      + '<div style="font-size:17px;font-weight:800;color:var(--dim);font-family:var(--mono);">' + (p.pick || i+1) + '</div>'
+      + '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);">' + p.team + '</div>'
+      + movBadge
+      + '</div>'
+      + '<div>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--text);">' + name + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:1px;">' + p.pos + ' · ' + p.college + (p.consensus_rank ? ' · Consensus #' + p.consensus_rank : '') + '</div>'
+      + '</div>'
+      + '<div style="text-align:right;">'
+      + '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:' + confColor + '22;color:' + confColor + ';">' + conf + '</span>'
+      + '<div style="font-size:9px;color:var(--dim);margin-top:2px;">' + (sc > 0 ? sc + 'pts signal' : 'consensus') + '</div>'
+      + '</div>'
       + '</summary>'
-      + '<div style="padding:10px 14px;border-top:1px solid var(--border);">'+reason+'</div>'
+      + '<div style="padding:10px 14px;border-top:1px solid var(--border);">' + reason + '</div>'
       + '</details>';
   }
   el.innerHTML = html;
 }
-
-function doSearch(q){
-  q=(q||'').trim().toLowerCase();
-  var out=document.getElementById('searchOut');
-  if(!q){out.innerHTML='';return;}
-  if(_sd){_run(q,out);}else{fetch('draft_intel.json').then(function(r){return r.json();}).then(function(data){_sd=data;_run(q,out);});}
-}
-function _run(q,out){
-  var mm=(_sd.prospects||[]).filter(function(p){return (p.prospect||p.name||"").toLowerCase().indexOf(q)>-1;});
-  if(!mm.length){out.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">No prospects found for "'+q+'"</p>';return;}
-  out.innerHTML=mm.map(function(p){
-    var sc=p.total_signal_score,col=sc>=20?'var(--green)':sc>=10?'var(--amber)':'var(--red)';
-    var teams=(p.teams||[]).map(function(t){
-      var sigs=(t.top_signals||[]).map(function(s,i){var lv=(t.signal_levels||[])[i]||'',c=lv==='HIGH'?'var(--green)':lv==='MEDIUM'?'var(--amber)':'var(--muted)';return'<span style="background:'+c+'22;color:'+c+';border-radius:4px;padding:2px 6px;font-size:11px;margin:2px;display:inline-block">'+s+'</span>';}).join('');
-      var arts=(t.top_articles||[]).slice(0,3).map(function(a){return'<div style="padding:5px 0;border-bottom:1px solid var(--border)"><a href="'+a.link+'" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px">'+a.title+'</a><br><span style="color:var(--muted);font-size:11px">'+a.source+'</span></div>';}).join('');
-      return'<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><b style="color:var(--text);font-size:13px">'+t.team+'</b><span style="font-size:20px;font-weight:800;color:var(--green)">+'+t.score+' pts</span></div><div style="margin-bottom:6px">'+sigs+'</div>'+arts+'</div>';
-    }).join('');
-    return'<div class="ai-panel" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><div style="font-size:20px;font-weight:700;color:var(--text)">'+(p.prospect||p.name||"")+'</div><div style="color:var(--muted);font-size:13px;margin-top:2px">'+p.pos+' · '+p.college+'</div>'+(p.consensus_rank?'<div style="color:var(--muted);font-size:12px;margin-top:3px">Rank <b style="color:var(--text)">#'+p.consensus_rank+'</b> · Top: <b style="color:var(--accent)">'+(p.top_landing_spot||'—')+'</b></div>':'')+'</div><div style="text-align:right"><div style="font-size:34px;font-weight:800;color:'+col+'">'+sc+'</div><div style="color:var(--muted);font-size:11px">signal pts</div></div></div>'+teams+'</div>';
-  }).join('');
-}
-</script>
-<script>
-var DRAFT_ORDER = [
-  {pick:1,team:'Raiders'},{pick:2,team:'Jets'},{pick:3,team:'Cardinals'},
-  {pick:4,team:'Browns'},{pick:5,team:'Giants'},{pick:6,team:'Patriots'},
-  {pick:7,team:'Panthers'},{pick:8,team:'Saints'},{pick:9,team:'Titans'},
-  {pick:10,team:'Bears'},{pick:11,team:'Rams'},{pick:12,team:'Cowboys'},
-  {pick:13,team:'Commanders'},{pick:14,team:'Dolphins'},{pick:15,team:'Seahawks'},
-  {pick:16,team:'Jets'},{pick:17,team:'Lions'},{pick:18,team:'Chargers'},
-  {pick:19,team:'Bengals'},{pick:20,team:'Steelers'},{pick:21,team:'Ravens'},
-  {pick:22,team:'Cowboys'},{pick:23,team:'Texans'},{pick:24,team:'Browns'},
-  {pick:25,team:'Bears'},{pick:26,team:'Bills'},{pick:27,team:'49ers'},
-  {pick:28,team:'Chiefs'},{pick:29,team:'Dolphins'},{pick:30,team:'Packers'},
-  {pick:31,team:'Vikings'},{pick:32,team:'Eagles'}
-];
-
-function runMockDraft(prospects) {
-  var available = prospects.slice().sort(function(a,b){return a.consensus_rank - b.consensus_rank;});
-  var taken = {};
-  var results = [];
-
-  DRAFT_ORDER.forEach(function(slot) {
-    // Find highest-signal available player for this team
-    var teamPicks = available.filter(function(p) {
-      if(taken[(p.prospect||p.name||"")]) return false;
-      var teamData = (p.teams||[]).find(function(t){ return t.team === slot.team; });
-      return teamData && teamData.score > 0;
-    }).sort(function(a,b){
-      var aScore = (a.teams.find(function(t){return t.team===slot.team;})||{}).score||0;
-      var bScore = (b.teams.find(function(t){return t.team===slot.team;})||{}).score||0;
-      return bScore - aScore;
-    });
-
-    var picked, signalScore = 0, hasSignal = false;
-    if(teamPicks.length > 0) {
-      picked = teamPicks[0];
-      signalScore = (picked.teams.find(function(t){return t.team===slot.team;})||{}).score||0;
-      hasSignal = true;
-    } else {
-      // Best available by consensus rank
-      picked = available.find(function(p){ return !taken[(p.prospect||p.name||"")]; });
-    }
-
-    if(picked) {
-      taken[picked.name] = true;
-      results.push({pick:slot.pick, team:slot.team, player:picked.name, pos:picked.pos, signal:signalScore, hasSignal:hasSignal, rank:picked.consensus_rank});
-    }
-  });
-  return results;
-}
-
-
-function initMockDraft() {
-  if(_sd && _sd.prospects) { renderMockDraft(_sd.prospects); return; }
-  fetch('draft_intel.json').then(function(r){return r.json();}).then(function(data){
-    _sd = data;
-    renderMockDraft(data.prospects);
-  });
-}
-</script>
-<script>
-function patchGeneralLabels() {
-  // Replace all text occurrences of "GENERAL" in the rendered page with a styled badge
-  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  var nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(function(node) {
-    if (node.textContent.includes('GENERAL') && node.parentElement && node.parentElement.tagName !== 'SCRIPT' && node.parentElement.tagName !== 'STYLE') {
-      var span = document.createElement('span');
-      span.innerHTML = node.textContent.replace(/GENERAL/g,
-        '<span class="general-tag" title="National buzz &#8212; mentioned by national outlets but not yet linked to a specific team">&#9675; National Intel</span>'
-      );
-      node.parentElement.replaceChild(span, node);
-    }
-  });
-}
-// Run after data loads
-document.addEventListener('DOMContentLoaded', function() {
-  var obs = new MutationObserver(function() { patchGeneralLabels(); });
-  obs.observe(document.body, { childList: true, subtree: true });
-  setTimeout(patchGeneralLabels, 2000);
-  setTimeout(patchGeneralLabels, 5000);
-});
 
 function doTeamSearch(q) {
   q = (q || '').trim().toLowerCase();
