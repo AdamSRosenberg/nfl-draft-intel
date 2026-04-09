@@ -112,26 +112,38 @@ def fetch_polymarket_signals(results, prospects):
 
 def _score_prediction_markets(markets, results, prospects, source, title_key, yes_price_key, ticker_key):
     """
-    For each market, try to match prospect + team.
-    If probability > 60%, add HIGH signal. If > 40%, add MEDIUM signal.
+    Score prediction markets as a SECONDARY signal.
+    Max ONE contribution per prospect-team pair — markets inform, not dominate.
+    Probability tiers: >60% = 5pts, 40-60% = 3pts, 20-40% = 1pt
+    This keeps beat reporter signal as primary and markets as a useful tiebreaker.
     """
-    for market in markets:
+    # Track scored pairs to prevent accumulation across multiple markets
+    scored_pairs = set()
+
+    # Sort by probability descending so highest-confidence market wins each pair
+    def get_price(m):
+        try:
+            p = float(m.get(yes_price_key, 0) or 0)
+            return p / 100.0 if p > 1 else p
+        except:
+            return 0
+
+    sorted_markets = sorted(markets, key=get_price, reverse=True)
+
+    for market in sorted_markets:
         title = str(market.get(title_key, "")).lower()
         if not title:
             continue
 
-        # Try to find a prospect mentioned
         matched_prospect = None
         for prospect in prospects:
             parts = [p for p in prospect.lower().split() if len(p) > 3]
             if any(p in title for p in parts):
                 matched_prospect = prospect
                 break
-
         if not matched_prospect:
             continue
 
-        # Try to find a team mentioned
         matched_team = "GENERAL"
         for team, aliases in TEAM_ALIASES.items():
             all_terms = [team.lower()] + aliases
@@ -139,48 +151,52 @@ def _score_prediction_markets(markets, results, prospects, source, title_key, ye
                 matched_team = team
                 break
 
-        # Get probability
+        # For pick-number markets (Kalshi KXNFLDRAFTPICK), match by pick number
         try:
-            price = float(market.get(yes_price_key, 0) or 0)
-            # Kalshi prices are 0-1, Polymarket sometimes 0-100
-            if price > 1:
-                price = price / 100.0
+            strike = market.get("custom_strike", {})
+            if strike:
+                pick_num = int(strike.get("Count", 0))
+                if pick_num:
+                    for team, team_pick in DRAFT_ORDER.items():
+                        if team_pick == pick_num:
+                            matched_team = team
+                            break
+        except:
+            pass
+
+        pair_key = f"{matched_prospect}:{matched_team}"
+        if pair_key in scored_pairs:
+            continue  # Already have the best market signal for this pair
+        scored_pairs.add(pair_key)
+
+        try:
+            prob = get_price(market)
         except:
             continue
 
-        if price < 0.2:
-            continue  # Too unlikely, skip
+        if prob < 0.20:
+            continue
 
-        # Score based on probability
-        if price >= 0.60:
-            signal_pts = 8   # HIGH — market strongly believes this
-            level = "HIGH"
-            signal_kw = f"{source} {int(price*100)}% probability"
-        elif price >= 0.40:
-            signal_pts = 4   # MEDIUM
-            level = "MEDIUM"
-            signal_kw = f"{source} {int(price*100)}% probability"
+        if prob >= 0.60:
+            signal_pts, level = 5, "HIGH"
+        elif prob >= 0.40:
+            signal_pts, level = 3, "MEDIUM"
         else:
-            signal_pts = 1   # LOW
-            level = "LOW"
-            signal_kw = f"{source} {int(price*100)}% probability"
+            signal_pts, level = 1, "LOW"
 
         market_title = str(market.get(title_key, ""))
         ticker = str(market.get(ticker_key, ""))
-        link = f"https://kalshi.com/markets/{ticker}" if source == "Kalshi" else f"https://polymarket.com/event/{ticker}"
+        link = f"https://kalshi.com/markets/{ticker.lower().split('-')[0]}/{ticker}" if source == "Kalshi" else f"https://polymarket.com/event/{ticker}"
 
         results[matched_prospect][matched_team]["score"] += signal_pts
-        results[matched_prospect][matched_team]["signals"].append(signal_kw)
+        results[matched_prospect][matched_team]["signals"].append(f"{source} {int(prob*100)}%")
         results[matched_prospect][matched_team]["signal_levels"].append(level)
         results[matched_prospect][matched_team]["articles"].append({
-            "title": f"[{source} {int(price*100)}%] {market_title}",
+            "title": f"[{source} {int(prob*100)}%] {market_title}",
             "link": link,
             "source": source,
             "published": datetime.now().isoformat(),
         })
-
-
-GOOGLE_NEWS_BASE = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q="
 
 def fetch_google_news(prospect_name, days_back=7):
     """Search Google News RSS for a prospect and return recent articles."""
