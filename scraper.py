@@ -116,7 +116,6 @@ def _score_prediction_markets(markets, results, prospects, source, title_key, ye
     High volume + high probability = smart money. Low volume = noise.
     Capped at ONE contribution per prospect-team pair (best conviction wins).
     """
-    import math
     scored_pairs = set()
 
     def get_price(m):
@@ -387,6 +386,7 @@ Usage:
     python3 nfl_draft_intel_v3.py --demo       # Demo mode (no internet)
 """
 
+import math
 import feedparser
 import requests
 import json
