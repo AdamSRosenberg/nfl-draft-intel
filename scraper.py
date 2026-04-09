@@ -7,22 +7,94 @@
 # High-probability contracts (>60%) count as STRONG signal
 # ─────────────────────────────────────────────
 
-KALSHI_API = "https://api.elections.kalshi.com/trade-api/v2/markets?limit=100&series_ticker=NFLDRAFT"
-POLYMARKET_API = "https://gamma-api.polymarket.com/markets?tag=nfl-draft&limit=100&active=true"
+KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2/markets"
+KALSHI_SERIES = ["KXNFLDRAFTPICK", "KXNFLDRAFT1ST", "KXNFLDRAFT1"]
 
 def fetch_kalshi_signals(results, prospects):
-    """Pull Kalshi NFL Draft markets and score high-probability contracts as signal."""
-    try:
-        r = requests.get(KALSHI_API, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-        if r.status_code != 200:
-            print(f"  Kalshi: HTTP {r.status_code}")
-            return
-        markets = r.json().get("markets", [])
-        print(f"  Kalshi: {len(markets)} draft markets found")
-        _score_prediction_markets(markets, results, prospects, source="Kalshi",
-            title_key="title", yes_price_key="yes_ask", ticker_key="ticker_name")
-    except Exception as e:
-        print(f"  Kalshi error: {e}")
+    """
+    Pull all Kalshi NFL Draft pick markets via pagination.
+    Each market is: Who will be picked Nth in the NFL Draft?
+    custom_strike.Person = prospect name, custom_strike.Count = pick number
+    yes_ask_dollars = probability (0.0 to 1.0)
+    """
+    all_markets = []
+    for series in KALSHI_SERIES:
+        cursor = None
+        for _ in range(10):  # max 10 pages per series
+            try:
+                url = f"{KALSHI_BASE}?series_ticker={series}&limit=100"
+                if cursor:
+                    url += f"&cursor={cursor}"
+                r = requests.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}, timeout=10)
+                if r.status_code != 200:
+                    break
+                data = r.json()
+                markets = data.get("markets", [])
+                all_markets.extend(markets)
+                cursor = data.get("cursor")
+                if not cursor or not markets:
+                    break
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"  Kalshi {series} error: {e}")
+                break
+
+    print(f"  Kalshi: {len(all_markets)} markets fetched")
+
+    for market in all_markets:
+        try:
+            strike = market.get("custom_strike", {})
+            person = strike.get("Person", "")
+            pick_num = int(strike.get("Count", 0))
+            if not person or not pick_num:
+                continue
+
+            prob = float(market.get("yes_ask_dollars", 0) or 0)
+            if prob < 0.20:
+                continue
+
+            # Match prospect name
+            matched_prospect = None
+            for prospect in prospects:
+                parts = [p for p in prospect.lower().split() if len(p) > 3]
+                person_lower = person.lower()
+                if any(p in person_lower for p in parts):
+                    matched_prospect = prospect
+                    break
+            if not matched_prospect:
+                continue
+
+            # Match team by pick number
+            matched_team = "GENERAL"
+            for team, team_pick in DRAFT_ORDER.items():
+                if team_pick == pick_num:
+                    matched_team = team
+                    break
+
+            # Score
+            if prob >= 0.60:
+                pts, level = 10, "HIGH"
+            elif prob >= 0.40:
+                pts, level = 6, "MEDIUM"
+            else:
+                pts, level = 2, "LOW"
+
+            ticker = market.get("ticker", "")
+            link = f"https://kalshi.com/markets/{ticker.lower().split('-')[0]}/{ticker}"
+            title = f"[Kalshi {int(prob*100)}%] {person} picked #{pick_num}"
+
+            results[matched_prospect][matched_team]["score"] += pts
+            results[matched_prospect][matched_team]["signals"].append(f"Kalshi {int(prob*100)}%")
+            results[matched_prospect][matched_team]["signal_levels"].append(level)
+            results[matched_prospect][matched_team]["articles"].append({
+                "title": title,
+                "link": link,
+                "source": "Kalshi",
+                "published": datetime.now().isoformat(),
+            })
+        except Exception:
+            continue
+
 
 def fetch_polymarket_signals(results, prospects):
     """Pull Polymarket NFL Draft markets and score high-probability contracts as signal."""
