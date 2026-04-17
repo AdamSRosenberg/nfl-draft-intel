@@ -10,7 +10,7 @@ permissions:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    steps:
+    steps
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -23,5 +23,5 @@ jobs:
           git config --global user.email "bot@github.com"
           git config --global user.name "Draft Bot"
           git add draft_intel.json
-          git diff --cached --quiet || git commit -m "Update draft intel [skip ci]"
+          git diff --cached --quiet || git commit -m "Update draft intel"
           git push
