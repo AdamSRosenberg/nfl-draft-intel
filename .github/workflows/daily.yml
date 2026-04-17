@@ -10,7 +10,7 @@ permissions:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    steps
+    steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
