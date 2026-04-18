@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  actions: write
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -25,3 +26,12 @@ jobs:
           git add draft_intel.json
           git diff --cached --quiet || git commit -m "Update draft intel"
           git push
+      - name: Trigger Pages deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/AdamSRosenberg/nfl-draft-intel/actions/workflows/static.yml/dispatches \
+            -d '{"ref":"main"}'
