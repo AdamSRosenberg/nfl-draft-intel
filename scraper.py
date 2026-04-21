@@ -491,8 +491,6 @@ TOP_PROSPECTS = {
     "Christen Miller":        {"pos": "DT",   "college": "Georgia",       "consensus_rank": 37},
     "Domonique Orange":       {"pos": "DT",   "college": "Iowa State",    "consensus_rank": 48},
     "Lee Hunter":             {"pos": "DT",   "college": "Texas Tech",    "consensus_rank": 53},
-    "Dante Moore":            {"pos": "QB",   "college": "Oregon",        "consensus_rank": 58},
-    "Will Howard":            {"pos": "QB",   "college": "Penn State",    "consensus_rank": 62},
 }
 
 PROSPECT_ALIASES = {
@@ -547,7 +545,7 @@ PROSPECT_ALIASES = {
     "Allar": "Drew Allar",
     "Nussmeier": "Garrett Nussmeier",
     "Garrett": "Garrett Nussmeier",
-    "Moore": "Derrick Moore",
+    "Derrick Moore": "Derrick Moore",  # specific to avoid confusion
     "Thomas": "R Mason Thomas",
     "Barham": "Jaishawn Barham",
     "Height": "Romello Height",
@@ -572,6 +570,10 @@ PROSPECT_ALIASES = {
     "Klare": "Max Klare",
     "Burks": "Deion Burks",
     "Sarratt": "Elijah Sarratt",
+    "McDonald": "Kayden McDonald", "Kayden": "Kayden McDonald",
+    "Miller": "Christen Miller", "Christen": "Christen Miller",
+    "Orange": "Domonique Orange", "Domonique": "Domonique Orange",
+    "Hunter": "Lee Hunter", "Lee": "Lee Hunter",
 }
 
 CONNECTION_SIGNALS = {
