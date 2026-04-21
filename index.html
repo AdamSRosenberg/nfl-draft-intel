@@ -558,11 +558,24 @@ function renderMockDraft(picks) {
     Texans:     {pos:'OT',   note:'protecting CJ Stroud is the top priority as they build toward contention'},
     Patriots:   {pos:'OT',   note:'Drake Maye is the guy — now they need to build a line around him'},
     Seahawks:   {pos:'CB',   note:'rebuilding the secondary after losing key pieces in the offseason'},
+    Bengals:    {pos:'DT',   note:'traded R1 pick for Dexter Lawrence — no round 1 pick, building defense around him'},
+    Colts:      {pos:'QB',   note:'traded R1 pick to Jets — still need a long-term QB in round 2'},
+    Falcons:    {pos:'EDGE', note:'traded R1 pick to Rams — adding pass rush depth on day 2'},
+    Packers:    {pos:'WR',   note:'traded R1 pick to Cowboys — adding weapons for Jordan Love in round 2'},
+    Jaguars:    {pos:'DT',   note:'traded R1 pick to Browns — building a young defensive core'},
+    Broncos:    {pos:'TE',   note:'no R1 pick — adding a reliable receiving target for Bo Nix'},
   };
 
   var html = '';
+  var shownR2 = false;
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span style="font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--green);font-weight:700;">Round 1</span><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:9px;color:var(--muted);font-family:var(--mono);">picks 1–32 · signal-driven</span></div>';
   for (var i = 0; i < picks.length; i++) {
     var p = picks[i];
+    // Insert round 2 divider
+    if ((p.round === 2 || p.pick >= 33) && !shownR2) {
+      shownR2 = true;
+      html += '<div style="display:flex;align-items:center;gap:10px;margin:18px 0 10px;"><span style="font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;">Round 2</span><div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:9px;color:var(--muted);font-family:var(--mono);">picks 33–64 · signal-driven</span></div>';
+    }
     var name = p.prospect || p.name || '?';
     var sc = p.signal_score || 0;
     var rankDiff = Math.abs((p.consensus_rank || 99) - (p.pick || i+1));
