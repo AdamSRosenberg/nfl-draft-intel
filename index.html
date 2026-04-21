@@ -399,7 +399,7 @@ function renderTicker(data) {
       });
     });
   });
-  news.sort(function(a, b) { return b.score - a.score; });
+  news.sort(function(a, b) { var da = a.art.published||""; var db = b.art.published||""; if (db !== da) return db.localeCompare(da); return b.score - a.score; });
   markets.sort(function(a, b) { return b.score - a.score; });
   var seen = {};
   news = news.filter(function(n) {
