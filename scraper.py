@@ -487,6 +487,12 @@ TOP_PROSPECTS = {
     "Max Klare":              {"pos": "TE",   "college": "Ohio State",    "consensus_rank": 73},
     "Deion Burks":            {"pos": "WR",   "college": "Oklahoma",      "consensus_rank": 74},
     "Elijah Sarratt":         {"pos": "WR",   "college": "Indiana",       "consensus_rank": 75},
+    "Kayden McDonald":       {"pos": "DT",   "college": "Ohio State",   "consensus_rank": 33},
+    "Christen Miller":        {"pos": "DT",   "college": "Georgia",       "consensus_rank": 37},
+    "Domonique Orange":       {"pos": "DT",   "college": "Iowa State",    "consensus_rank": 48},
+    "Lee Hunter":             {"pos": "DT",   "college": "Texas Tech",    "consensus_rank": 53},
+    "Dante Moore":            {"pos": "QB",   "college": "Oregon",        "consensus_rank": 58},
+    "Will Howard":            {"pos": "QB",   "college": "Penn State",    "consensus_rank": 62},
 }
 
 PROSPECT_ALIASES = {
