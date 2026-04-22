@@ -602,7 +602,13 @@ function renderMockDraft(picks) {
       movBadge = '<div style="font-size:8px;color:var(--muted);margin-top:1px;">&#8212;</div>';
     }
 
-    // Reason
+    // Reason — fully rebuilt to use p.reason + betting context
+    var hasArticle = p.top_article_title && p.top_article_title.length > 0;
+    var hasLink = p.top_article_link && p.top_article_link.length > 0;
+    var isMarket = p.top_article_source === 'Kalshi' || p.top_article_source === 'Polymarket';
+    var pickRank = p.consensus_rank || 99;
+    var gap = pickRank - p.pick; // positive = value (picked later than consensus), negative = reach
+
     var reason = '<div style="font-size:12px;color:var(--muted);line-height:1.7;">';
 
     // Movement banner
@@ -610,62 +616,53 @@ function renderMockDraft(picks) {
       reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(45,204,112,.08);border-radius:6px;font-size:11px;color:var(--green);">&#9650; Moved up ' + (p.prev_pick - p.pick) + ' spot' + ((p.prev_pick - p.pick) > 1 ? 's' : '') + ' since last run (was pick #' + p.prev_pick + ')</div>';
     } else if (mov === 'DOWN' && p.prev_pick) {
       reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,77,109,.08);border-radius:6px;font-size:11px;color:#ff4d6d;">&#9660; Slipped ' + (p.pick - p.prev_pick) + ' spot' + ((p.pick - p.prev_pick) > 1 ? 's' : '') + ' since last run (was pick #' + p.prev_pick + ')</div>';
-    } else if (mov === 'NEW') {
-      reason += '<div style="margin-bottom:8px;padding:5px 10px;background:rgba(255,193,7,.08);border-radius:6px;font-size:11px;color:var(--amber);">&#9733; New to the mock this run — signal just emerged</div>';
     }
 
-    // Team context — signal-first, positional fit only when it actually applies
-    if (sc >= 8 && hasArticle) {
-      // Strong signal — lead with the data
-      if (posMatch) {
-        reason += '<div style="margin-bottom:8px;">' + p.team + ' have been linked to <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') by beat reporters — and it makes sense: ' + need.note + '.</div>';
-      } else {
-        reason += '<div style="margin-bottom:8px;">Beat reporters are connecting <strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') to ' + p.team + '. This is a best-player-available call — the signal is real even if the position isn\'t the primary need.</div>';
-      }
-    } else if (rankDiff <= 1) {
-      // Consensus lock
-      if (posMatch) {
-        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') falls exactly to ' + p.team + ' at pick #' + p.pick + ' — and fills a genuine need. ' + need.note + '.</div>';
-      } else {
-        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> is the consensus #' + p.consensus_rank + ' player and simply falls here. Best player available — ' + p.team + ' take the best on the board.</div>';
-      }
+    // PRIMARY: our signal-based reason text — THIS IS THE MAIN ANALYSIS
+    var mainReason = p.reason || '';
+    if (mainReason) {
+      reason += '<div style="margin-bottom:10px;color:var(--text);line-height:1.65;">' + mainReason + '</div>';
+    }
+
+    // BETTING CONTEXT STRIP — consensus gap, value/reach flag
+    var bettingCtx = '';
+    if (gap >= 10) {
+      bettingCtx = '&#9650; <strong style="color:var(--green);">Value pick:</strong> Consensus rank <strong>#' + pickRank + '</strong> — drafted <strong>' + gap + ' spots later</strong> than most boards project. Strong buy if signal is right.';
+    } else if (gap <= -10) {
+      var reachAmt = Math.abs(gap);
+      bettingCtx = '&#9660; <strong style="color:var(--amber);">Signal reach:</strong> Consensus rank <strong>#' + pickRank + '</strong> — our signal has this player going <strong>' + reachAmt + ' spots earlier</strong> than consensus. High conviction needed.';
+    } else if (gap === 0) {
+      bettingCtx = '&#9679; <strong style="color:var(--green);">Consensus match:</strong> Rank <strong>#' + pickRank + '</strong> aligns exactly with pick #' + p.pick + '. Low variance — this is where everyone has them.';
+    } else if (gap > 0) {
+      bettingCtx = '&#9679; Consensus rank <strong style="color:var(--text);">#' + pickRank + '</strong> — falls <strong>' + gap + ' spot' + (gap > 1 ? 's' : '') + '</strong> to this slot. Modest value.';
     } else {
-      // Fallback
-      if (posMatch) {
-        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') addresses a real need for ' + p.team + ': ' + need.note + '.</div>';
-      } else {
-        reason += '<div style="margin-bottom:8px;"><strong style="color:var(--text);">' + name + '</strong> (' + p.pos + ') is the best prospect available for ' + p.team + ' at this slot.</div>';
-      }
+      bettingCtx = '&#9679; Consensus rank <strong style="color:var(--text);">#' + pickRank + '</strong> — ' + Math.abs(gap) + '-spot reach vs consensus. Signal justifies it.';
     }
+    reason += '<div style="padding:6px 10px;background:rgba(255,255,255,.04);border-radius:6px;border-left:2px solid var(--border);font-size:11px;margin-bottom:8px;">' + bettingCtx + '</div>';
 
-    // Consensus
-    if (rankDiff === 0) {
-      reason += '<div style="margin-bottom:8px;">&#9679; <strong style="color:var(--green);">Consensus lock:</strong> Ranked <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> by Walter Football, PFF, CBS Sports, Draft Network — exact match to pick #' + p.pick + '.</div>';
-    } else if (rankDiff <= 3) {
-      reason += '<div style="margin-bottom:8px;">&#9679; Consensus has ' + name + ' around <strong style="color:var(--text);">#' + p.consensus_rank + '</strong> — only ' + rankDiff + ' spot' + (rankDiff > 1 ? 's' : '') + ' off this slot.</div>';
+    // CONFIDENCE SOURCE — what kind of intel is this?
+    var confLabel = p.confidence || 'LOW';
+    var confSrc = '';
+    var qualScore = p.quality_score || 0;
+    if (qualScore >= 8 || confLabel === 'HIGH') {
+      confSrc = '&#128293; <strong style="color:var(--green);">Hard intel</strong> — pre-draft visit, workout, or direct beat reporter sourcing. Highest predictive value.';
+    } else if (qualScore >= 4 || confLabel === 'MEDIUM') {
+      confSrc = '&#128308; <strong style="color:var(--amber);">Soft intel</strong> — mock mentions, buzz, market signals. Directional but not confirmed.';
     } else {
-      reason += '<div style="margin-bottom:8px;">&#9679; Consensus rank <strong style="color:var(--text);">#' + (p.consensus_rank||'?') + '</strong> — best available at pick #' + p.pick + ' given current signal.</div>';
+      confSrc = '&#9898; <strong style="color:var(--muted);">BPA logic</strong> — no direct team signal. Best player available at this slot given what fell.';
     }
+    reason += '<div style="font-size:11px;margin-bottom:8px;color:var(--muted);">' + confSrc + '</div>';
 
-    // Signal article
-    var hasArticle = p.top_article_title && p.top_article_title.length > 0;
-    var hasLink = p.top_article_link && p.top_article_link.length > 0;
-    var isMarket = p.top_article_source === 'Kalshi' || p.top_article_source === 'Polymarket';
-    if (sc >= 5 && hasArticle) {
-      var icon = isMarket ? '💰' : '🎵';
-      var label = isMarket ? 'Market signal' : 'Beat reporter signal';
-      reason += '<div style="margin-top:6px;padding:7px 10px;background:rgba(4,247,255,.06);border-radius:6px;border-left:2px solid var(--accent);">'
-        + '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">' + icon + ' ' + label + ' — ' + sc + ' pts</div>'
+    // SIGNAL ARTICLE — beat reporter link
+    if (hasArticle) {
+      var icon = isMarket ? '💰' : '📰';
+      var label = isMarket ? 'Market signal' : 'Beat reporter';
+      reason += '<div style="padding:7px 10px;background:rgba(4,247,255,.06);border-radius:6px;border-left:2px solid var(--accent);margin-bottom:6px;">'
+        + '<div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">' + icon + ' ' + label + (sc > 0 ? ' — ' + sc + ' pts signal' : '') + '</div>'
         + (hasLink ? '<a href="' + p.top_article_link + '" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none;line-height:1.4;">' + p.top_article_title + '</a>' : '<span style="font-size:11px;color:var(--text);">' + p.top_article_title + '</span>')
-        + (p.top_article_source ? '<span style="color:var(--dim);font-size:10px;margin-left:6px;">' + p.top_article_source + '</span>' : '')
+        + (p.top_article_source ? '<span style="color:var(--dim);font-size:10px;margin-left:6px;">— ' + p.top_article_source + '</span>' : '')
         + '</div>';
     }
-
-    // Signal keywords
-    var sigs = (p.top_signals || []).map(function(s) {
-      return '<span style="background:var(--accent)22;color:var(--accent);border-radius:3px;padding:1px 6px;font-size:10px;margin-right:3px;">' + s + '</span>';
-    }).join('');
-    if (sigs) { reason += '<div style="margin-top:6px;">' + sigs + '</div>'; }
 
     reason += '</div>';
 
