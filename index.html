@@ -409,7 +409,9 @@ function renderTicker(data) {
   });
   window._tickerNews = news;
   window._tickerMarkets = markets;
-  function buildItem(item, hidden) {
+  
+  function safeStr(s) { return (s||'').replace(/'/g, "\'"); }
+function buildItem(item, hidden) {
     var art = item.art;
     var title = (art.title || '').replace(/\[Kalshi[^\]]*\]/g, '').replace(/\[Polymarket[^\]]*\]/g, '').trim();
     var dateStr = art.published ? art.published.substring(5, 10) : '';
@@ -660,7 +662,7 @@ function renderMockDraft(picks) {
       var epColor = isMatch ? 'var(--green)' : isConflict ? 'var(--amber)' : 'var(--muted)';
       var r1top = (p.exec_r1_top_pos || []).join(', ') || 'varied';
       execProfile = '<div style="padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid ' + epColor + ';font-size:11px;margin-bottom:8px;">'
-        + '<span style="color:' + epColor + ';font-weight:600;">📋 ' + p.exec_name + '</span>'
+        + '<span style="color:' + epColor + ';font-weight:600;">📋 ' + safeStr(p.exec_name) + '</span>'
         + ' · R1 history: ' + r1top
         + (isMatch ? ' · <span style="color:var(--green);">✅ Position matches exec tendency</span>' : isConflict ? ' · <span style="color:var(--amber);">⚠️ Position outside exec typical R1 pattern</span>' : '')
         + '</div>';
@@ -831,12 +833,12 @@ function _runTeamSearch(q, out) {
         var matchColor = matchesMock ? 'var(--green)' : 'var(--amber)';
         var matchIcon = matchesMock ? '✅' : '🔁';
         execBox = '<div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border-left:3px solid var(--border);">'
-          + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📋 Exec Profile · ' + ep.exec + '</div>'
+          + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📋 Exec Profile · ' + safeStr(ep.exec) + '</div>'
           + '<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px;">'
           + '<span><span style="color:var(--text);">R1 history:</span> ' + (r1hist || 'limited data') + '</span>'
           + '<span><span style="color:var(--text);">All-time favored:</span> ' + (allTop || 'varied') + '</span>'
           + '</div>'
-          + (mockPick ? '<div style="font-size:11px;padding:4px 8px;border-radius:4px;display:inline-block;background:' + matchColor + '22;color:' + matchColor + ';">' + matchIcon + ' Mock pick (' + mockPick.pos + ') ' + (matchesMock ? 'matches this exec R1 tendency' : 'is outside typical R1 positions for ' + ep.exec) + '</div>' : '')
+          + (mockPick ? '<div style="font-size:11px;padding:4px 8px;border-radius:4px;display:inline-block;background:' + matchColor + '22;color:' + matchColor + ';">' + matchIcon + ' Mock pick (' + mockPick.pos + ') ' + (matchesMock ? 'matches this exec R1 tendency' : 'is outside typical R1 positions for ' + (ep.exec||'').replace(/'/g,"\\'")) + '</div>' : '')
           + '</div>';
       }
       mockBox = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">'
