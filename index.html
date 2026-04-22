@@ -652,6 +652,21 @@ function renderMockDraft(picks) {
     }
     reason += '<div style="padding:6px 10px;background:rgba(255,255,255,.04);border-radius:6px;border-left:2px solid var(--border);font-size:11px;margin-bottom:8px;">' + bettingCtx + '</div>';
 
+    // EXEC PROFILE CHECK
+    var execProfile = '';
+    if (p.exec_profile_note && p.exec_name) {
+      var isMatch = p.exec_profile_note.includes('✅');
+      var isConflict = p.exec_profile_note.includes('⚠️');
+      var epColor = isMatch ? 'var(--green)' : isConflict ? 'var(--amber)' : 'var(--muted)';
+      var r1top = (p.exec_r1_top_pos || []).join(', ') || 'varied';
+      execProfile = '<div style="padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid ' + epColor + ';font-size:11px;margin-bottom:8px;">'
+        + '<span style="color:' + epColor + ';font-weight:600;">📋 ' + p.exec_name + '</span>'
+        + ' · R1 history: ' + r1top
+        + (isMatch ? ' · <span style="color:var(--green);">✅ Position matches exec tendency</span>' : isConflict ? ' · <span style="color:var(--amber);">⚠️ Position outside exec's typical R1 pattern</span>' : '')
+        + '</div>';
+    }
+    reason += execProfile;
+
     // CONFIDENCE SOURCE — what kind of intel is this?
     var confLabel = p.confidence || 'LOW';
     var confSrc = '';
@@ -803,6 +818,27 @@ function _runTeamSearch(q, out) {
     var mockBox = '';
     if (mockPick) {
       var confColor = mockPick.confidence === 'HIGH' ? 'var(--green)' : 'var(--amber)';
+      
+      // Exec profile data
+      var ep = (window._sd && window._sd.exec_profiles && window._sd.exec_profiles[teamName]) || null;
+      var execBox = '';
+      if (ep && ep.exec) {
+        var r1hist = (ep.r1_pos_history || []).slice(0,3).join(' · ');
+        var allTop = (ep.all_time_top5 || []).slice(0,3).join(', ');
+        var r1Likes = ep.r1_pos_history ? ep.r1_pos_history.map(function(h){return h.split('(')[0];}) : [];
+        var allLikes = ep.all_time_top5 ? ep.all_time_top5.map(function(h){return h.split('(')[0];}) : [];
+        var matchesMock = mockPick && r1Likes.indexOf(mockPick.pos) > -1;
+        var matchColor = matchesMock ? 'var(--green)' : 'var(--amber)';
+        var matchIcon = matchesMock ? '✅' : '🔁';
+        execBox = '<div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border-left:3px solid var(--border);">'
+          + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📋 Exec Profile · ' + ep.exec + '</div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px;">'
+          + '<span><span style="color:var(--text);">R1 history:</span> ' + (r1hist || 'limited data') + '</span>'
+          + '<span><span style="color:var(--text);">All-time favored:</span> ' + (allTop || 'varied') + '</span>'
+          + '</div>'
+          + (mockPick ? '<div style="font-size:11px;padding:4px 8px;border-radius:4px;display:inline-block;background:' + matchColor + '22;color:' + matchColor + ';">' + matchIcon + ' Mock pick (' + mockPick.pos + ') ' + (matchesMock ? 'matches this exec's R1 tendency' : 'is outside typical R1 positions for ' + ep.exec) + '</div>' : '')
+          + '</div>';
+      }
       mockBox = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">'
         + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">ScottBot Mock Pick</div>'
         + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">'
@@ -822,7 +858,8 @@ function _runTeamSearch(q, out) {
 
       mockBox += '</div>'
         + '<span style="font-size:12px;font-weight:700;padding:4px 12px;border-radius:4px;background:' + confColor + '22;color:' + confColor + ';">' + mockPick.confidence + '</span>'
-        + '</div></div>';
+        + '</div></div>'
+        + execBox;
     } else if (noPick) {
       mockBox = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);">No Round 1 pick — traded away.</div>';
     }
