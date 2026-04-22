@@ -10,6 +10,134 @@
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2/markets"
 KALSHI_SERIES = ["KXNFLDRAFTPICK", "KXNFLDRAFT1ST", "KXNFLDRAFT1"]
 
+
+# ── DraftAxis visit intelligence ──────────────────────────────────────────────
+DRAFTAXIS_TEAM_VISITS = {}  # populated by fetch_draftaxis_visits()
+
+def fetch_draftaxis_visits():
+    """Fetch all 32 teams' Top-30 and private workout visits from DraftAxis RSC endpoint."""
+    import urllib.request, re, json as _json
+    global DRAFTAXIS_TEAM_VISITS
+    try:
+        url = "https://draft-axis.com/dashboards/draft-visits"
+        req = urllib.request.Request(url, headers={
+            "Accept": "text/x-component",
+            "RSC": "1",
+            "Next-Router-State-Tree": "%5B%22%22%2C%7B%22children%22%3A%5B%22dashboards%22%2C%7B%22children%22%3A%5B%22draft-visits%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%5D%7D%5D%7D%5D%7D%5D",
+            "User-Agent": "Mozilla/5.0 (compatible; NFLDraftBot/1.0)"
+        })
+        with urllib.request.urlopen(req, timeout=30) as r:
+            raw = r.read().decode("utf-8", errors="replace")
+
+        # Unescape the double-encoded JSON in the RSC stream
+        unesc = raw.replace('\\"', '"').replace('\\\\', '\\')
+
+        # Find all team blocks — each "visits" array is preceded by a team identifier
+        # Pattern: look for visits arrays and team names in the surrounding context
+        team_visits = {}
+        nfl_teams = ["49ers","Bears","Bengals","Bills","Broncos","Browns","Buccaneers",
+                     "Cardinals","Chargers","Chiefs","Colts","Commanders","Cowboys",
+                     "Dolphins","Eagles","Falcons","Giants","Jaguars","Jets","Lions",
+                     "Packers","Panthers","Patriots","Raiders","Rams","Ravens","Saints",
+                     "Seahawks","Steelers","Texans","Titans","Vikings"]
+
+        # Split on team boundaries — find each team name near a visits array
+        pos = 0
+        visits_positions = []
+        while pos < len(unesc):
+            vi = unesc.find('"visits":[{"year":202', pos)
+            if vi == -1:
+                break
+            visits_positions.append(vi)
+            pos = vi + 1
+
+        for vi in visits_positions:
+            # Look back up to 3000 chars for team name
+            lookback = unesc[max(0, vi-3000):vi]
+            team_found = None
+            for team in nfl_teams:
+                if f'"{team}"' in lookback:
+                    # Use last occurrence
+                    team_found = team
+            if not team_found:
+                continue
+
+            # Extract visits array
+            sub = unesc[vi + len('"visits":'):]
+            try:
+                # Count brackets to find end of array
+                bracket_depth = 0
+                end = 0
+                for i, ch in enumerate(sub):
+                    if ch == '[':
+                        bracket_depth += 1
+                    elif ch == ']':
+                        bracket_depth -= 1
+                        if bracket_depth == 0:
+                            end = i + 1
+                            break
+                visits_json = sub[:end]
+                visits_list = _json.loads(visits_json)
+                # Filter 2026, Top-30 (PRI) and Private Workout (WOR) only
+                hard = [
+                    {"player": v["player"], "pos": v["pos"], "school": v.get("school",""),
+                     "visit_type": "Top 30" if v["type"] == "PRI" else "Private Workout"}
+                    for v in visits_list
+                    if v.get("year") == 2026 and v.get("type") in ("PRI", "WOR")
+                ]
+                if hard and team_found not in team_visits:
+                    team_visits[team_found] = hard
+            except Exception:
+                continue
+
+        DRAFTAXIS_TEAM_VISITS = team_visits
+        total = sum(len(v) for v in team_visits.values())
+        print(f"  DraftAxis: loaded {total} hard-intel visits across {len(team_visits)} teams")
+        return team_visits
+
+    except Exception as e:
+        print(f"  DraftAxis fetch failed: {e} — using static fallback")
+        # Static fallback (last known data)
+        DRAFTAXIS_TEAM_VISITS = DRAFTAXIS_STATIC_FALLBACK
+        return DRAFTAXIS_STATIC_FALLBACK
+
+
+# Static fallback in case DraftAxis is unreachable
+DRAFTAXIS_STATIC_FALLBACK = {
+    "Raiders": [{"player":"Fernando Mendoza","pos":"QB","visit_type":"Top 30"},{"player":"Colton Hood","pos":"CB","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Jets": [{"player":"David Bailey","pos":"EDGE","visit_type":"Top 30"},{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"Colton Hood","pos":"CB","visit_type":"Top 30"},{"player":"Drew Allar","pos":"QB","visit_type":"Private Workout"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Ty Simpson","pos":"QB","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Sonny Styles","pos":"LB","visit_type":"Top 30"}],
+    "Cardinals": [{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"David Bailey","pos":"EDGE","visit_type":"Top 30"},{"player":"Jeremiyah Love","pos":"RB","visit_type":"Top 30"},{"player":"Chris Brazzell II","pos":"WR","visit_type":"Top 30"},{"player":"Drew Allar","pos":"QB","visit_type":"Top 30"}],
+    "Titans": [{"player":"Jeremiyah Love","pos":"RB","visit_type":"Top 30"},{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Colton Hood","pos":"CB","visit_type":"Top 30"},{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"Chris Brazzell II","pos":"WR","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Giants": [{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Mansoor Delane","pos":"CB","visit_type":"Top 30"},{"player":"Sonny Styles","pos":"LB","visit_type":"Top 30"}],
+    "Browns": [{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Kenyon Sadiq","pos":"TE","visit_type":"Top 30"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Jordyn Tyson","pos":"WR","visit_type":"Top 30"},{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Ty Simpson","pos":"QB","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"}],
+    "Commanders": [{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"Mansoor Delane","pos":"CB","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Saints": [{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Mansoor Delane","pos":"CB","visit_type":"Top 30"},{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Chiefs": [{"player":"Rueben Bain Jr","pos":"EDGE","visit_type":"Top 30"},{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Colton Hood","pos":"CB","visit_type":"Top 30"},{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"}],
+    "Dolphins": [{"player":"Mansoor Delane","pos":"CB","visit_type":"Top 30"},{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"}],
+    "Cowboys": [{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"},{"player":"Mansoor Delane","pos":"CB","visit_type":"Top 30"},{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Rams": [{"player":"Carnell Tate","pos":"WR","visit_type":"Top 30"},{"player":"Chris Brazzell II","pos":"WR","visit_type":"Top 30"},{"player":"Ty Simpson","pos":"QB","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Ravens": [{"player":"Mansoor Delane","pos":"CB","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Buccaneers": [{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"}],
+    "Lions": [{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"}],
+    "Vikings": [{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Panthers": [{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Steelers": [{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Makai Lemon","pos":"WR","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Chargers": [{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"}],
+    "Eagles": [{"player":"Keldric Faulk","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"}],
+    "Bears": [{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Bills": [{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"}],
+    "49ers": [{"player":"Denzel Boston","pos":"WR","visit_type":"Top 30"},{"player":"Chris Brazzell II","pos":"WR","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Texans": [{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"C.J. Allen","pos":"LB","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Patriots": [{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Oscar Delp","pos":"TE","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Seahawks": [{"player":"Cashius Howell","pos":"EDGE","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"}],
+    "Bengals": [{"player":"Rueben Bain Jr","pos":"EDGE","visit_type":"Top 30"},{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Kayden McDonald","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Arvell Reese","pos":"EDGE","visit_type":"Top 30"}],
+    "Falcons": [{"player":"Emmanuel McNeil-Warren","pos":"S","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Zion Young","pos":"EDGE","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Jaguars": [{"player":"Domani Jackson","pos":"CB","visit_type":"Private Workout"}],
+    "Packers": [{"player":"Chris Brazzell II","pos":"WR","visit_type":"Top 30"},{"player":"Malik Muhammad","pos":"CB","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+    "Colts": [{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"},{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"}],
+    "Broncos": [{"player":"Christen Miller","pos":"DT","visit_type":"Top 30"},{"player":"Malachi Lawrence","pos":"EDGE","visit_type":"Top 30"}],
+}
+
 def fetch_kalshi_signals(results, prospects):
     """
     Pull all Kalshi NFL Draft pick markets via pagination.
@@ -1041,6 +1169,11 @@ def aggregate(refresh=False):
     fetch_polymarket_signals(results, list(TOP_PROSPECTS.keys()))
     print("  Prediction markets complete")
 
+    # DraftAxis pre-draft visit intelligence
+    print("  Fetching DraftAxis pre-draft visit data...")
+    fetch_draftaxis_visits()
+    print("  DraftAxis complete")
+
     # Build structured output
     output = {
         "generated_at": datetime.now().isoformat(),
@@ -1078,6 +1211,18 @@ def aggregate(refresh=False):
         total_score = sum(d["score"] for _, d in sorted_teams)
         top_team = sorted_teams[0][0] if sorted_teams else None
 
+        # Build DraftAxis visit data for this prospect
+        da_teams = []
+        da_visit_count = 0
+        for da_team, da_visits in DRAFTAXIS_TEAM_VISITS.items():
+            for v in da_visits:
+                if v["player"].lower().startswith(prospect.split()[0].lower()) and (
+                    len(prospect.split()) < 2 or prospect.split()[-1][:4].lower() in v["player"].lower()
+                ):
+                    da_teams.append({"team": da_team, "visit_type": v["visit_type"]})
+                    da_visit_count += 1
+                    break
+
         output["prospects"].append({
             "name": prospect,
             "pos": info["pos"],
@@ -1091,6 +1236,12 @@ def aggregate(refresh=False):
                 for t in teams_out
                 for a in t.get("top_articles",[])
             ),
+            "draft_axis": {
+                "visit_count": da_visit_count,
+                "visiting_teams": da_teams,
+                "source": "draft-axis.com",
+                "visit_type_label": "Top 30 / Private Workout"
+            },
         })
 
     # Sort by total signal activity (most buzz first)
