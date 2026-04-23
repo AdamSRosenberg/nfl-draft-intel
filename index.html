@@ -533,8 +533,8 @@ function initMockDraft() {
       var matchesR1 = p.exec_r1_top_pos.indexOf(p.pos) > -1;
       var topR1 = p.exec_r1_top_pos.slice(0, 2).join('/') || 'varied';
       p.exec_profile_note = matchesR1
-        ? ('✅ [' + ((p.exec_name)||'').replace(/'/g,\"\\'\"\) + '] Fits exec R1 history')
-        : ('⚠️ [' + ((p.exec_name)||'').replace(/'/g,\"\\'\"\) + '] Exec leans ' + topR1 + ' in R1');
+        ? ('\u2705 [' + (p.exec_name||'') + '] Fits exec R1 history')
+        : ('\u26a0\ufe0f [' + (p.exec_name||'') + '] Exec leans ' + topR1 + ' in R1');
     });
     window._mockData = d.mock_draft;
     var rt = document.getElementById('run-time');
@@ -685,7 +685,7 @@ function renderMockDraft(picks) {
       var epColor = isMatch ? 'var(--green)' : isConflict ? 'var(--amber)' : 'var(--muted)';
       var r1top = (p.exec_r1_top_pos || []).join(', ') || 'varied';
       execProfile = '<div style="padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid ' + epColor + ';font-size:11px;margin-bottom:8px;">'
-        + '<span style="color:' + epColor + ';font-weight:600;">📋 ' + ((p.exec_name)||'').replace(/'/g,\"\\'\"\) + '</span>'
+        + '<span style="color:' + epColor + ';font-weight:600;">\ud83d\udccb ' + (p.exec_name||'') + '</span>'
         + ' · R1 history: ' + r1top
         + (isMatch ? ' · <span style="color:var(--green);">✅ Position matches exec tendency</span>' : isConflict ? ' · <span style="color:var(--amber);">⚠️ Position outside exec typical R1 pattern</span>' : '')
         + '</div>';
