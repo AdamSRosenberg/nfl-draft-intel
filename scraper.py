@@ -1247,6 +1247,26 @@ def aggregate(refresh=False):
     # Sort by total signal activity (most buzz first)
     output["prospects"].sort(key=lambda p: p["total_signal_score"], reverse=True)
 
+    # Merge exec_profiles from previous JSON (preserve hand-crafted data)
+    prev_path = Path("draft_intel.json")
+    if prev_path.exists():
+        try:
+            prev_data = json.loads(prev_path.read_text())
+            # Preserve exec_profiles if present
+            if "exec_profiles" in prev_data and not output.get("exec_profiles"):
+                output["exec_profiles"] = prev_data["exec_profiles"]
+                print(f"  Preserved exec_profiles for {len(output['exec_profiles'])} teams")
+            # Merge draft_axis data from previous prospects
+            prev_da = {p["name"]: p.get("draft_axis") for p in prev_data.get("prospects", []) if p.get("draft_axis")}
+            if prev_da:
+                for p in output["prospects"]:
+                    if p["name"] in prev_da:
+                        p["draft_axis"] = prev_da[p["name"]]
+                matched = sum(1 for p in output["prospects"] if p.get("draft_axis"))
+                print(f"  Merged DraftAxis data into {matched}/{len(output['prospects'])} prospects")
+        except Exception as e:
+            print(f"  Could not merge previous data: {e}")
+
     # Generate signal-driven mock draft
     try:
         # Load previous mock draft
