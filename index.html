@@ -521,8 +521,6 @@ function toggle(name) {
 loadData();
 </script>
 <script>
-function safeStr(s) { return (s || '').replace(/'/g, "\\'"); }
-
 function initMockDraft() {
   fetch('draft_intel.json?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(d) {
     window._sd = d;
@@ -535,8 +533,8 @@ function initMockDraft() {
       var matchesR1 = p.exec_r1_top_pos.indexOf(p.pos) > -1;
       var topR1 = p.exec_r1_top_pos.slice(0, 2).join('/') || 'varied';
       p.exec_profile_note = matchesR1
-        ? ('✅ [' + safeStr(p.exec_name) + '] Fits exec R1 history')
-        : ('⚠️ [' + safeStr(p.exec_name) + '] Exec leans ' + topR1 + ' in R1');
+        ? ('✅ [' + ((p.exec_name)||'').replace(/'/g,\"\\'\"\) + '] Fits exec R1 history')
+        : ('⚠️ [' + ((p.exec_name)||'').replace(/'/g,\"\\'\"\) + '] Exec leans ' + topR1 + ' in R1');
     });
     window._mockData = d.mock_draft;
     var rt = document.getElementById('run-time');
@@ -687,7 +685,7 @@ function renderMockDraft(picks) {
       var epColor = isMatch ? 'var(--green)' : isConflict ? 'var(--amber)' : 'var(--muted)';
       var r1top = (p.exec_r1_top_pos || []).join(', ') || 'varied';
       execProfile = '<div style="padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid ' + epColor + ';font-size:11px;margin-bottom:8px;">'
-        + '<span style="color:' + epColor + ';font-weight:600;">📋 ' + safeStr(p.exec_name) + '</span>'
+        + '<span style="color:' + epColor + ';font-weight:600;">📋 ' + ((p.exec_name)||'').replace(/'/g,\"\\'\"\) + '</span>'
         + ' · R1 history: ' + r1top
         + (isMatch ? ' · <span style="color:var(--green);">✅ Position matches exec tendency</span>' : isConflict ? ' · <span style="color:var(--amber);">⚠️ Position outside exec typical R1 pattern</span>' : '')
         + '</div>';
@@ -858,7 +856,7 @@ function _runTeamSearch(q, out) {
         var matchColor = matchesMock ? 'var(--green)' : 'var(--amber)';
         var matchIcon = matchesMock ? '✅' : '🔁';
         execBox = '<div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border-left:3px solid var(--border);">'
-          + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📋 Exec Profile · ' + safeStr(ep.exec) + '</div>'
+          + '<div style="font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">📋 Exec Profile · ' + ((ep.exec)||'').replace(/'/g,\"\\'\"\) + '</div>'
           + '<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px;">'
           + '<span><span style="color:var(--text);">R1 history:</span> ' + (r1hist || 'limited data') + '</span>'
           + '<span><span style="color:var(--text);">All-time favored:</span> ' + (allTop || 'varied') + '</span>'
