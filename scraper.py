@@ -1249,35 +1249,49 @@ def aggregate(refresh=False):
 
     # Generate signal-driven mock draft
     try:
-        new_mock = generate_mock_draft(output["prospects"])
-        # Load previous mock draft to compute movement
+        # Load previous mock draft
         prev_mock = {}
         prev_path = Path("draft_intel.json")
+        prev_full_mock = []
         if prev_path.exists():
             try:
                 prev_data = json.loads(prev_path.read_text())
-                for pick in prev_data.get("mock_draft", []):
+                prev_full_mock = prev_data.get("mock_draft", [])
+                for pick in prev_full_mock:
                     prev_mock[pick["prospect"]] = pick["pick"]
             except Exception:
                 pass
-        # Annotate each pick with movement vs previous run
-        for pick in new_mock:
-            prospect = pick["prospect"]
-            prev_pick = prev_mock.get(prospect)
-            if prev_pick is None:
-                pick["movement"] = "NEW"
-                pick["prev_pick"] = None
-            elif prev_pick == pick["pick"]:
-                pick["movement"] = "STABLE"
-                pick["prev_pick"] = prev_pick
-            elif prev_pick > pick["pick"]:
-                pick["movement"] = "UP"
-                pick["prev_pick"] = prev_pick
-            else:
-                pick["movement"] = "DOWN"
-                pick["prev_pick"] = prev_pick
-        output["mock_draft"] = new_mock
-        print(f"  Mock draft: {len(output['mock_draft'])} picks generated")
+
+        # PRESERVE existing manual mock if it has 50+ picks (hand-crafted beat-reporter mock)
+        # Only auto-generate if no substantial mock exists yet
+        if len(prev_full_mock) >= 50:
+            print(f"  Mock draft: preserving existing {len(prev_full_mock)}-pick manual mock")
+            # Just update movement annotations based on signal changes
+            for pick in prev_full_mock:
+                if "movement" not in pick:
+                    pick["movement"] = "STABLE"
+                    pick["prev_pick"] = pick["pick"]
+            output["mock_draft"] = prev_full_mock
+        else:
+            new_mock = generate_mock_draft(output["prospects"])
+            # Annotate each pick with movement vs previous run
+            for pick in new_mock:
+                prospect = pick["prospect"]
+                prev_pick = prev_mock.get(prospect)
+                if prev_pick is None:
+                    pick["movement"] = "NEW"
+                    pick["prev_pick"] = None
+                elif prev_pick == pick["pick"]:
+                    pick["movement"] = "STABLE"
+                    pick["prev_pick"] = prev_pick
+                elif prev_pick > pick["pick"]:
+                    pick["movement"] = "UP"
+                    pick["prev_pick"] = prev_pick
+                else:
+                    pick["movement"] = "DOWN"
+                    pick["prev_pick"] = prev_pick
+            output["mock_draft"] = new_mock
+            print(f"  Mock draft: {len(output['mock_draft'])} picks generated")
     except Exception as e:
         print(f"  Mock draft error: {e}")
         output["mock_draft"] = []
