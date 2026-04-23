@@ -410,7 +410,6 @@ function renderTicker(data) {
   window._tickerNews = news;
   window._tickerMarkets = markets;
   
-  function safeStr(s) { return (s||'').replace(/'/g, "\'"); }
 function buildItem(item, hidden) {
     var art = item.art;
     var title = (art.title || '').replace(/\[Kalshi[^\]]*\]/g, '').replace(/\[Polymarket[^\]]*\]/g, '').trim();
@@ -522,6 +521,32 @@ function toggle(name) {
 loadData();
 </script>
 <script>
+function safeStr(s) { return (s || '').replace(/'/g, "\\'"); }
+
+function initMockDraft() {
+  fetch('draft_intel.json?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(d) {
+    window._sd = d;
+    var ep = d.exec_profiles || {};
+    (d.mock_draft || []).forEach(function(p) {
+      var teamEp = ep[p.team];
+      if (!teamEp) return;
+      p.exec_name = teamEp.exec || '';
+      p.exec_r1_top_pos = (teamEp.r1_pos_history || []).map(function(h) { return h.split('(')[0]; });
+      var matchesR1 = p.exec_r1_top_pos.indexOf(p.pos) > -1;
+      var topR1 = p.exec_r1_top_pos.slice(0, 2).join('/') || 'varied';
+      p.exec_profile_note = matchesR1
+        ? ('✅ [' + safeStr(p.exec_name) + '] Fits exec R1 history')
+        : ('⚠️ [' + safeStr(p.exec_name) + '] Exec leans ' + topR1 + ' in R1');
+    });
+    window._mockData = d.mock_draft;
+    var rt = document.getElementById('run-time');
+    if (rt && d.generated_at) rt.textContent = new Date(d.generated_at).toLocaleString();
+    if (document.getElementById('mock-draft-board').style.display !== 'none') {
+      renderMockDraft(d.mock_draft);
+    }
+  });
+}
+
 function toggleMockDraft() {
   var board = document.getElementById('mock-draft-board');
   var btn = document.getElementById('mock-draft-btn');
@@ -532,25 +557,7 @@ function toggleMockDraft() {
     if (window._mockData && window._mockData.length) {
       renderMockDraft(window._mockData);
     } else {
-      fetch('draft_intel.json?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
-      window._sd=d;
-      // Annotate mock picks with exec profile data
-      var ep = d.exec_profiles || {};
-      (d.mock_draft||[]).forEach(function(p) {
-        var teamEp = ep[p.team];
-        if (!teamEp) return;
-        p.exec_name = teamEp.exec || '';
-        p.exec_r1_top_pos = (teamEp.r1_pos_history||[]).map(function(h){return h.split('(')[0];});
-        p.exec_all_top_pos = (teamEp.all_time_top5||[]).map(function(h){return h.split('(')[0];});
-        var matchesR1 = p.exec_r1_top_pos.indexOf(p.pos) > -1;
-        var topR1 = p.exec_r1_top_pos.slice(0,2).join('/') || 'varied';
-        p.exec_profile_note = matchesR1
-          ? '✅ [' + p.exec_name + '] Fits exec R1 history'
-          : '⚠️ [' + p.exec_name + '] Exec leans ' + topR1 + ' in R1';
-      });
-      window._mockData=d.mock_draft;
-      renderMockDraft(d.mock_draft);
-    });
+      initMockDraft();
     }
   } else {
     board.style.display = 'none';
